@@ -3,8 +3,6 @@ A lightweight, high-performance JavaScript engine designed for automatic, collis
 
 # 2D Geometric Grid Layout Engine
 
-A lightweight, high-performance JavaScript engine designed for automatic, collision-free arrangement of UI elements in a 2D grid. Perfect for dashboards, photo books, or masonry-style layouts.
-
 ## Features
 - **Collision Avoidance:** Smart boundary detection ensures elements never overlap.
 * **Pure Vanilla JS:** Zero external libraries (no jQuery, no React). Just high-speed native JavaScript.
