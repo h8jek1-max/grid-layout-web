@@ -1,4 +1,7 @@
 # grid-layout-web
+
+🚀 **[View Live Demo / Živá ukázka zde](https://h8jek1-max.github.io/grid-layout-web/)**
+
 A lightweight, high-performance JavaScript engine designed for automatic, collision-free arrangement of UI elements in a 2D grid. Perfect for dashboards, photo books, or masonry-style layouts.
 
 # 2D Geometric Grid Layout Engine
