@@ -1,576 +1,105 @@
+
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automatické uspořádání prvků</title>
+    <title>2D Geometric Grid Layout Engine</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
         body {
-            background-color: #111;
-            font-family: Arial, sans-serif;
-            width: 100vw;
-            height: 100vh;
-            overflow-y: scroll;
-            padding: 0px;
-        }
-
-        #rodic-kontejner {
-            width: 100%;
-            height: 100%;
-            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #1a1a1a;
-            border-radius: 12px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            /* Pro plynulé zvětšování samotného kontejneru */
-            transition: height 0.4s ease; 
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-
-        .potomek-js {
-            position: absolute;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            background: #24242e;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333344;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #8080b6;
+        }
+        p {
+            color: #a0a0b0;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        .links-grid {
             display: flex;
             flex-direction: column;
-            color: white;
-            padding: 5px;
-            text-align: center;
+            gap: 15px;
+        }
+        .card-link {
+            display: block;
+            text-decoration: none;
+            background: #2c2c3a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        .card-link:hover {
+            border-color: #8080b6;
+            background: #343446;
+            transform: translateY(-2px);
+        }
+        .card-title {
+            font-size: 1.2rem;
             font-weight: bold;
-            
-            /* Výchozí stav pro načítací animaci */
-            opacity: 0;
-            transform: scale(0.95) translateY(5px);
+            color: #ffffff;
+            margin-bottom: 5px;
         }
-
-        /* Dynamická třída pro plynulé přesuny PO načtení a PO resizu */
-        .povolit-animace .potomek-js {
-            transition: left 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
-                        top 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
-                        width 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
-                        height 0.1s cubic-bezier(0.25, 1, 0.5, 1),
-                        opacity 0.3s ease, 
-                        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .card-desc {
+            font-size: 0.9rem;
+            color: #8a8a9e;
         }
-
-        /* Třída pro zviditelnění po načtení */
-        .potomek-js.viditelny {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-
-        .potomek-js img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-top: 5px;
-        }
-
-        /* Načítací obrazovka */
-        #loading-obrazovka {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #111;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #1abc9c;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            transition: opacity 0.5s ease, visibility 0.4s ease;
-        }
-        
-        #loading-obrazovka.skryt {
-            opacity: 0;
-            visibility: hidden;
+        footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #555566;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-obrazovka"></div>
-
-    <div id="rodic-kontejner">
-        <div id="1" class="potomek-js" style="background-color: #d35400; width: 30%; min-width: 250px; max-width: 500px;">
-            <div>1. Procentuální panel<br><small>(width: 30%)</small></div>
+    <div class="container">
+        <h1>2D Geometric Grid Layout Engine</h1>
+        <p>Explore the evolution and different implementations of this 2D Geometric Grid Layout Engine.</p>
+        
+        <div class="links-grid">
+            <!-- Link to the older/basic version folder -->
+            <a href="./basic-version/index.html" class="card-link">
+                <div class="card-title">1. Basic 2D Geometric Grid Layout Engine</div>
+                <div class="card-desc">The original layout featuring JavaScript-2D Geometric Grid Layout Engine.</div>
+            </a>
+            
+            <!-- Link to the new advanced version folder -->
+            <a href="./page-maker-version/index.html" class="card-link">
+                <div class="card-title">2. Advanced page maker</div>
+                <div class="card-desc">Upgraded version featuring added a page maker to browse the web.</div>
+            </a>
         </div>
 
-        <div id="2" class="potomek-js" style="background-color: #27ae60; width: 400px; max-width: 800px; min-width:300px;">
-            <div style="width: 100%;">
-                <p style="font-size: 0.8rem; font-weight: normal; margin-top: 5px;">
-                    Matematika hranic byla opravena. Debounce timer je nastaven na 200ms a CSS animace se během tažení okna inteligentně vypínají.
-                </p>
-                            <div style="width: 100%;">
-                <p>2. Auto-Height Text</p>
-                <p style="font-size: 0.8rem; font-weight: normal; margin-top: 5px;">
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                </p>
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-                    Skript automaticky změří výšku tohoto textu a vyhradí mu přesné místo v síti, aniž by vytvořil prázdnou řadu.
-            </div>
-            </div>
-        </div>
-
-        <div id="3" class="potomek-js" style="background-color: #2c3e50; min-width: 200px; max-width: 250px; min-height: 250px; max-height: 400px;">
-            <div>3. Sloupový modul<br><small>(Fixní limity)</small></div>
-        </div>
-
-        <div id="4" class="potomek-js" style="background-color: #2980b9; width: 100%; max-width: 450px; min-width: 250px;">
-            <div>4. Fotografie (Fixní poměr)</div>
-            <img src="https://images.unsplash.com/photo-1574217013471-c32c6846cef7?q=80&w=1974&auto=format&fit=crop" alt="Foto">
-        </div>
-
-        <div id="5" class="potomek-js" style="background-color: #8e44ad; min-width: 200px; min-height: 150px;">
-            <div>5. Pružný modul B</div>
-        </div>
-
-        <div id="6" class="potomek-js" style="background-color: #1abc9c; min-width: 200px; min-height: 150px;">
-            <div>6. Spodní modul C</div>
-        </div>
-                <div id="1" class="potomek-js" style="background-color: #d35400; width: 30%; min-width: 250px; max-width: 500px;">
-            <div>1. Procentuální panel<br><small>(width: 30%)</small></div>
-        </div>
-
-        <div id="2" class="potomek-js" style="background-color: #27ae60; width: 400px; min-width:300px;">
-            <div style="width: 100%;">
-                <p>2. Auto-Height Text</p>
-                <p style="font-size: 0.8rem; font-weight: normal; margin-top: 5px;">
-                    Matematika hranic byla opravena. Debounce timer je nastaven na 200ms a CSS animace se během tažení okna inteligentně vypínají.
-                </p>
-            </div>
-        </div>
-
-        <div id="3" class="potomek-js" style="background-color: #2c3e50; min-width: 200px; max-width: 250px; min-height: 250px; max-height: 400px;">
-            <div>3. Sloupový modul<br><small>(Fixní limity)</small></div>
-        </div>
-
-        <div id="4" class="potomek-js" style="background-color: #2980b9; width: 100%; max-width: 450px; min-width: 300px;">
-            <div>4. Fotografie (Fixní poměr)</div>
-            <img src="https://images.unsplash.com/photo-1574217013471-c32c6846cef7?q=80&w=1974&auto=format&fit=crop" alt="Foto">
-        </div>
-
-        <div id="5" class="potomek-js" style="background-color: #8e44ad; min-width: 200px; min-height: 150px;">
-            <div>5. Pružný modul B</div>
-        </div>
-
-        <div id="6" class="potomek-js" style="background-color: #1abc9c; min-width: 200px; min-height: 150px;">
-            <div>6. Spodní modul C</div>
-        </div>
+        <footer>Built with HTML, CSS, and Vanilla JavaScript</footer>
     </div>
-
-<script>
-var GLOBAL_NASTAVENI = {
-
-    vychoziMinSirka: 250,
-    vychoziMaxSirka: 1600,
-    vychoziMinVyska: 200,
-    vychoziMaxVyska: 2000,
-    gap: 5,                           // Zkus nastavit na 0, už to nebude kmitat.
-    
-    zpusobRazeni: 'volne',             // 'volne' | 'striktne'
-    zarovnaniKontejneru: 'stred',      // 'stred' | 'vlevo'
-    
-    // EXPANZE (Růst)
-    faktorZvetseniDoGap: 1.0,          // Kolik volného místa modul vyplní (0 = nic, 1 = vše)
-    smerZvetseni: 'oba',               // 'sirka' | 'vyska' | 'oba'
-    zachovatPomerStran: false,          // NEFUNGUJE: Pokud roste do šířky, vyroste proporcionálně i do výšky (ideální pro obrázky)
-    
-    // CENTROVÁNÍ 
-    horizontalniCentrovani: true,      
-    vertikalniCentrovani: true,        
-    
-    // POKROČILÁ FYZIKA (Nevizuální limity pro výpočetní výkon. Celý proces běží skrytě v 1 milisekundě)
-    pruznostRelaxace: 0.5,             // 0.1 až 1.0. Menší číslo = přesnější centrovaní u velmi složitých layoutů, ale trvá to více iterací.
-    maxIteraci: 50                     // Kolikrát se smějí prvky před vykreslením na obrazovku navzájem posunout/odtlačit.                
-};
-
-var puvodniStylPamet = new Map();
-
-function nactiProstoroveLimity(element, sirkaRodice, vyskaRodice) {
-    var styl = window.getComputedStyle(element);
-    const img = element.querySelector('img');
-    const p = element.querySelector('p');
-    var jeObrazek = !!img;
-    const jetext = !!p;
-    var pomer = 4 / 3; 
-    
-    if (jeObrazek && img.naturalWidth) {
-        pomer = img.naturalWidth / img.naturalHeight;
-    }
-
-    if (!puvodniStylPamet.has(element)) {
-        puvodniStylPamet.set(element, { width: element.style.width || null, height: element.style.height || null });
-    }
-    var puvodniStyly = puvodniStylPamet.get(element);
-
-    function nactiMax(hodnota, vychozi) {
-        if (!hodnota || hodnota === 'none') return vychozi;
-        return parseFloat(hodnota);
-    }
-
-    function parsujRozmer(hodnotaStylu, celkovyRozmerRodice) {
-        if (!hodnotaStylu) return null;
-        if (hodnotaStylu.indexOf('%') !== -1) return (parseFloat(hodnotaStylu) / 100) * celkovyRozmerRodice;
-        return parseFloat(hodnotaStylu) || null;
-    }
-
-    var cistaSirka = sirkaRodice - (GLOBAL_NASTAVENI.gap * 2);
-
-    var vyzadovanaSirka = parsujRozmer(puvodniStyly.width, cistaSirka);
-    if (vyzadovanaSirka >= cistaSirka) vyzadovanaSirka = cistaSirka;
-    
-    var vyzadovanaVyska = parsujRozmer(puvodniStyly.height, vyskaRodice);
-    var minW = parseFloat(styl.minWidth) || GLOBAL_NASTAVENI.vychoziMinSirka;
-    var maxW = nactiMax(styl.maxWidth, GLOBAL_NASTAVENI.vychoziMaxSirka);
-    var minH = parseFloat(styl.minHeight) || GLOBAL_NASTAVENI.vychoziMinVyska;
-    var maxH = nactiMax(styl.maxHeight, GLOBAL_NASTAVENI.vychoziMaxVyska);
-
-    if (!jeObrazek && puvodniStyly.height === null) {
-        element.style.width = (vyzadovanaSirka || minW) + "px";
-        element.style.height = "auto";
-        element.style.left = "0px";
-        vyzadovanaVyska = element.scrollHeight;
-    }
-    
-    var offset = false;
-    if (jeObrazek) {
-        element.style.width = (vyzadovanaSirka || minW) + "px";
-        element.style.height = "auto";
-        offset = img.offsetTop;
-        vyzadovanaVyska = element.scrollHeight;
-    }
-
-    return {
-        element: element, jeObrazek: jeObrazek, jetext: jetext, offset: offset, pomerStran: pomer,
-        vyzadovanaSirka: vyzadovanaSirka, vyzadovanaVyska: vyzadovanaVyska,
-        minW: minW, maxW: maxW, minH: minH, maxH: maxH, w: 0, h: 0, x: 0, y: 0
-    };
-}
-
-function provedProstorovyLayout() {
-    var kontejner = document.getElementById('rodic-kontejner');
-    if (!kontejner) return;
-
-    var sirkaPlochy = Math.max(10, kontejner.clientWidth - (GLOBAL_NASTAVENI.gap * 2));
-    var vyskaOknaProDno = kontejner.clientHeight - (GLOBAL_NASTAVENI.gap * 2);
-    
-    var prvky = Array.from(kontejner.getElementsByClassName('potomek-js'));
-    if (prvky.length === 0) return;
-
-    var dataPrvku = prvky.map(function(el) {
-        return nactiProstoroveLimity(el, kontejner.clientWidth, kontejner.clientHeight);
-    });
-
-    dataPrvku.forEach(function(p) {
-        p.w = p.vyzadovanaSirka !== null ? p.vyzadovanaSirka : p.minW;
-        p.h = p.vyzadovanaVyska !== null ? p.vyzadovanaVyska : (p.jeObrazek ? ((p.w / p.pomerStran) + p.offset) : p.minH);
-
-        if (p.w < p.minW) p.w = p.minW; if (p.w > p.maxW) p.w = p.maxW;
-        if (p.h < p.minH) p.h = p.minH; if (p.h > p.maxH) p.h = p.maxH;
-        
-        if (p.w > sirkaPlochy) {
-            p.w = sirkaPlochy;
-            if (p.jeObrazek || GLOBAL_NASTAVENI.zachovatPomerStran) p.h = (p.w / p.pomerStran) + (p.offset || 0);
-        }
-    });
-
-    var umisteneObdelniky = [];
-    var eps = 0.1; 
-    
-    function kontrolaPruniku(testL, testT, testW, testH) {
-        var testR = testL + testW; var testB = testT + testH;
-        for (var i = 0; i < umisteneObdelniky.length; i++) {
-            var u = umisteneObdelniky[i];
-            if (testL < u.right + GLOBAL_NASTAVENI.gap - eps && 
-                testR > u.left - GLOBAL_NASTAVENI.gap + eps && 
-                testT < u.bottom + GLOBAL_NASTAVENI.gap - eps && 
-                testB > u.top - GLOBAL_NASTAVENI.gap + eps) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    var startY = 0; 
-    dataPrvku.forEach(function(p) {
-        var nalezenoMisto = false;
-        
-        if (GLOBAL_NASTAVENI.zpusobRazeni === 'striktne' && umisteneObdelniky.length > 0) {
-            startY = umisteneObdelniky[umisteneObdelniky.length - 1].top;
-        } else {
-            startY = 0;
-        }
-
-        for (var y = startY; y < 20000; y += 4) {
-            for (var x = 0; x <= sirkaPlochy - p.w; x += 4) {
-                if (!kontrolaPruniku(x, y, p.w, p.h)) {
-                    p.x = x; p.y = y;
-                    nalezenoMisto = true;
-                    break;
-                }
-            }
-            if (nalezenoMisto) break;
-        }
-        umisteneObdelniky.push({ left: p.x, top: p.y, right: p.x + p.w, bottom: p.y + p.h, originalRef: p });
-    });
-
-    function prekazkaNaOseY(a, b) { 
-        return (a.top < b.bottom + GLOBAL_NASTAVENI.gap - eps && a.bottom > b.top - GLOBAL_NASTAVENI.gap + eps); 
-    }
-    function prekazkaNaOseX(a, b) { 
-        return (a.left < b.right + GLOBAL_NASTAVENI.gap - eps && a.right > b.left - GLOBAL_NASTAVENI.gap + eps); 
-    }
-    function kontrolaPrunikuKrome(testL, testT, testW, testH, ignorovanyPrvek) {
-        var testR = testL + testW; var testB = testT + testH;
-        for (var i = 0; i < umisteneObdelniky.length; i++) {
-            var u = umisteneObdelniky[i];
-            if (u === ignorovanyPrvek) continue;
-            if (testL < u.right + GLOBAL_NASTAVENI.gap - eps && testR > u.left - GLOBAL_NASTAVENI.gap + eps && 
-                testT < u.bottom + GLOBAL_NASTAVENI.gap - eps && testB > u.top - GLOBAL_NASTAVENI.gap + eps) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    var zmeneno = true;
-    var iterace = 0;
-    
-    var sitMaxY = Math.max.apply(Math, umisteneObdelniky.map(function(o) { return o.bottom; }));
-    var dnoProstoru = Math.max(vyskaOknaProDno, sitMaxY);
-
-    while (zmeneno && iterace < GLOBAL_NASTAVENI.maxIteraci) {
-        zmeneno = false;
-        iterace++;
-        
-        umisteneObdelniky.forEach(function(el) {
-            var p = el.originalRef;
-            
-            var zedL = 0;
-            var zedR = sirkaPlochy;
-            var zedT = 0;
-            var zedB = dnoProstoru; 
-
-            umisteneObdelniky.forEach(function(jiny) {
-                if (el === jiny) return;
-                
-                if (prekazkaNaOseY(el, jiny)) {
-                    if (jiny.right <= el.left) zedL = Math.max(zedL, jiny.right + GLOBAL_NASTAVENI.gap);
-                    if (jiny.left >= el.right) zedR = Math.min(zedR, jiny.left - GLOBAL_NASTAVENI.gap);
-                }
-                if (prekazkaNaOseX(el, jiny)) {
-                    if (jiny.bottom <= el.top) zedT = Math.max(zedT, jiny.bottom + GLOBAL_NASTAVENI.gap);
-                    if (jiny.top >= el.bottom) zedB = Math.min(zedB, jiny.top - GLOBAL_NASTAVENI.gap);
-                }
-            });
-
-            var sirkaEl = el.right - el.left;
-            var vyskaEl = el.bottom - el.top;
-
-            // --- ZVĚTŠENÍ ---
-            if (GLOBAL_NASTAVENI.faktorZvetseniDoGap > 0) {
-                var volnoX = (zedR - zedL) - sirkaEl;
-                var volnoY = (zedB - zedT) - vyskaEl;
-                
-                var puvodniW = p.w; var puvodniH = p.h;
-
-                if (volnoX > 2 || volnoY > 2) {
-                    
-                    if (p.jeObrazek || GLOBAL_NASTAVENI.zachovatPomerStran) {
-                        var narustDleX = volnoX * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
-                        var narustDleY_naSirku = (volnoY * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2) * p.pomerStran;
-                        
-                        // Zajištění, aby nová velikost nepřekročila maximální povolené rozměry z css
-                        var limitMaxX = p.maxW - p.w;
-                        var limitMaxY_naSirku = (p.maxH - p.h) * p.pomerStran;
-                        
-                        var bezpecnyNarustCelkem = Math.min(narustDleX, narustDleY_naSirku, limitMaxX, limitMaxY_naSirku);
-                        
-                        if (bezpecnyNarustCelkem > 0.5) {
-                            var novaSirka = p.w + bezpecnyNarustCelkem;
-                            var novaVyska = (novaSirka / p.pomerStran) + (p.offset || 0);
-                            
-                            var testL = el.left - (novaSirka - p.w)/2;
-                            var testT = el.top - (novaVyska - p.h)/2;
-                            
-                            // Kontrola absolutních hranic
-                            if (testL >= 0 && testL + novaSirka <= sirkaPlochy && testT >= 0 && testT + novaVyska <= dnoProstoru) {
-                                if (!kontrolaPrunikuKrome(testL, testT, novaSirka, novaVyska, el)) {
-                                    p.w = novaSirka; p.h = novaVyska;
-                                }
-                            }
-                        }
-                    } else {
-                        if (volnoX > 2 && (GLOBAL_NASTAVENI.smerZvetseni === 'sirka' || GLOBAL_NASTAVENI.smerZvetseni === 'oba')) {
-                            var narustX = volnoX * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
-                            var novaSirka = Math.min(p.w + narustX, p.maxW);
-                            var testL = el.left - (novaSirka - p.w)/2;
-                            if (testL >= 0 && testL + novaSirka <= sirkaPlochy) {
-                                if (!kontrolaPrunikuKrome(testL, el.top, novaSirka, vyskaEl, el)) p.w = novaSirka;
-                            }
-                        }
-        
-                        if (volnoY > 2 && (GLOBAL_NASTAVENI.smerZvetseni === 'vyska' || GLOBAL_NASTAVENI.smerZvetseni === 'oba')) {
-                            var narustY = volnoY * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
-                            var novaVyska = Math.min(p.h + narustY, p.maxH);
-                            var testT = el.top - (novaVyska - p.h)/2;
-                            if (testT >= 0 && testT + novaVyska <= dnoProstoru) {
-                                if (!kontrolaPrunikuKrome(el.left, testT, p.w, novaVyska, el)) p.h = novaVyska;
-                            }
-                        }
-                    }
-                }
-
-                if (p.w !== puvodniW || p.h !== puvodniH) {
-                    sirkaEl = p.w; vyskaEl = p.h;
-                    el.right = el.left + sirkaEl; el.bottom = el.top + vyskaEl; zmeneno = true;
-                }
-            }
-
-            // --- CENTROVÁNÍ ---
-            if (GLOBAL_NASTAVENI.horizontalniCentrovani) {
-                var celkovyProstorX = zedR - zedL;
-                if (celkovyProstorX > sirkaEl) {
-                    var idealniX = zedL + (celkovyProstorX - sirkaEl) / 2;
-                    var deltaX = idealniX - el.left;
-                    if (Math.abs(deltaX) > 0.5) {
-                        var posunX = Math.round(deltaX * GLOBAL_NASTAVENI.pruznostRelaxace);
-                        if (posunX === 0) posunX = deltaX > 0 ? 1 : -1;
-                        if (el.left + posunX >= 0 && el.left + posunX + sirkaEl <= sirkaPlochy) {
-                            if (!kontrolaPrunikuKrome(el.left + posunX, el.top, sirkaEl, vyskaEl, el)) {
-                                el.left += posunX; el.right = el.left + sirkaEl; p.x = el.left; zmeneno = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (GLOBAL_NASTAVENI.vertikalniCentrovani) {
-                var celkovyProstorY = zedB - zedT;
-                if (celkovyProstorY > vyskaEl) {
-                    var idealniY = zedT + (celkovyProstorY - vyskaEl) / 2;
-                    var deltaY = idealniY - el.top;
-                    if (Math.abs(deltaY) > 0.5) {
-                        var posunY = Math.round(deltaY * GLOBAL_NASTAVENI.pruznostRelaxace);
-                        if (posunY === 0) posunY = deltaY > 0 ? 1 : -1;
-                        if (el.top + posunY >= 0 && el.top + posunY + vyskaEl <= dnoProstoru) {
-                            if (!kontrolaPrunikuKrome(el.left, el.top + posunY, sirkaEl, vyskaEl, el)) {
-                                el.top += posunY; el.bottom = el.top + vyskaEl; p.y = el.top; zmeneno = true;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    var s_MinX = Math.min.apply(Math, umisteneObdelniky.map(o => o.left));
-    var s_MaxX = Math.max.apply(Math, umisteneObdelniky.map(o => o.right));
-    var s_MinY = Math.min.apply(Math, umisteneObdelniky.map(o => o.top));
-    var s_MaxY = Math.max.apply(Math, umisteneObdelniky.map(o => o.bottom));
-    
-    var mrizkaW = s_MaxX - s_MinX;
-    var mrizkaH = s_MaxY - s_MinY;
-    
-    var offsetX = GLOBAL_NASTAVENI.gap;
-    var offsetY = GLOBAL_NASTAVENI.gap;
-
-    if (GLOBAL_NASTAVENI.zarovnaniKontejneru === 'stred') {
-        offsetX = ((kontejner.clientWidth) - mrizkaW) / 2 - s_MinX;
-    }
-
-    if (kontejner.clientHeight > mrizkaH + (GLOBAL_NASTAVENI.gap * 2)) {
-        offsetY = (kontejner.clientHeight - mrizkaH) / 2 - s_MinY;
-        kontejner.style.height = "100%";
-        document.body.style.overflowY = "hidden"; 
-    } else {
-        kontejner.style.height = (mrizkaH + (GLOBAL_NASTAVENI.gap * 2)) + "px";
-        document.body.style.overflowY = "scroll";
-    }
-
-    dataPrvku.forEach(function(p) {
-        p.element.style.width = Math.floor(p.w) + "px";
-        p.element.style.height = Math.floor(p.h) + "px";
-        p.element.style.left = Math.floor(p.x + offsetX) + "px";
-        p.element.style.top = Math.floor(p.y + offsetY) + "px";
-    });
-}
-
-function inicializujLayout() {
-    provedProstorovyLayout();
-    
-    // Zhasne loader a postupně zobrazí prvky
-    var loader = document.getElementById('loading-obrazovka');
-    var kontejner = document.getElementById('rodic-kontejner');
-    
-    if (loader) loader.classList.add('skryt');
-    
-    // Zapne CSS transitions po úvodním výpočtu
-    kontejner.classList.add('povolit-animace');
-    
-    var prvky = Array.from(document.getElementsByClassName('potomek-js'));
-    prvky.forEach(function(el, i) {
-        setTimeout(function() {
-            el.classList.add('viditelny');
-        }, 50 + (i * 20)); // Kaskádový efekt objevování (80ms zpoždění mezi prvky)
-    });
-}
-
-window.addEventListener('load', function() {
-    var kontejner = document.getElementById('rodic-kontejner');
-    if (kontejner) {
-        
-        // První start
-        inicializujLayout();
-
-        // Bezpečný Resize Observer s Debounce 200ms
-        var resizeTimeout;
-        var observer = new ResizeObserver(function() {
-            
-            // 1. Při začátku tažení okna se vypne CSS transition, aby nerušila matematiku
-            kontejner.classList.remove('povolit-animace');
-            
-            // 2. Vymaže předchozí čekání (debounce)
-            clearTimeout(resizeTimeout);
-            
-            // 3. Spustí přepočet až 200ms poté, co uživatel PŘESTAL hýbat oknem
-            resizeTimeout = setTimeout(function() {
-                provedProstorovyLayout();
-                
-                // 4. Vrátí plynulé animace těsně poté, co je mřížka spočítaná
-                setTimeout(() => {
-                    kontejner.classList.add('povolit-animace');
-                }, 50);
-                
-            }, 100); 
-        });
-        
-        observer.observe(kontejner);
-    }
-});
-</script>
 
 </body>
 </html>
