@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatické uspořádání prvků</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+           // background-color: #111;
+            //font-family: Arial, sans-serif;
+            //font-family: open sans, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            padding: 8px;
+             color: #212529;
+             font-family: system-ui, -apple-system, sans-serif;
+              background-color: #f8f9fa;
+              // line-height: 1.5;
+        }
+
+        #rodic-kontejner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            //background-color: #1a1a1a;
+            //border-radius: 12px;
+            //box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            /* Pro plynulé zvětšování samotného kontejneru */
+            transition: height 0.4s ease; 
+        }
+
+        .potomek-js {
+            position: absolute;
+            border-radius: 8px;
+            overflow: hidden;
+            //box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            color: #3F3E26;
+            padding: 0px;
+            text-align: center;
+			font-size: 15px;
+			color: #444444;
+  letter-spacing: 0.2pt;
+			 // line-height: 22px;
+            /* line-height: 125%; font-weight: bold; Výchozí stav pro načítací animaci */
+            opacity: 0;
+            transform: scale(0.95) translateY(5px);
+        }
+
+        .potomek-js div{
+            color: #222222;
+            padding: 10px;
+            text-align: start;
+			font-size: 18px;
+			line-height: 130%;//line-height: 1.6;
+        }
+        body h2{
+            text-align: center;
+    padding-top: 5px;
+    padding-bottom: 7px;
+    text-decoration: none;
+  color: rgb(68, 68, 68);
+  letter-spacing: 1pt;
+  text-shadow: rgb(51, 51, 51) 0px 0px 0px;
+  font-size: 140%;
+  line-height: 110%;
+        }
+        body h3{
+            text-align: center;
+    padding-top: 5px;
+    padding-bottom: 7px;
+    text-decoration: none;
+  color: rgb(68, 68, 68);
+  letter-spacing: 1pt;
+  text-shadow: rgb(51, 51, 51) 0px 0px 0px;
+  //font-size: 140%;
+  line-height: 110%;
+        }
+        body h4{
+            text-align: center;
+            text-decoration: none;
+  color: rgb(68, 68, 68);
+  letter-spacing: 1pt;
+  text-shadow: rgb(51, 51, 51) 0px 0px 0px;
+  //font-size: 140%;
+  line-height: 110%;
+  padding: 7px;
+        }
+        .foto-popisek {
+            color: #3F3E26 !important;
+          //  padding: 15px !important;
+            text-align: center !important;
+			font-size: 17px !important;
+			font-style: italic !important;
+			line-height: 140% !important;
+            margin-bottom: 10px;
+  text-shadow: rgb(51, 51, 51) 0px 0px 0px;
+        }
+
+        /* Dynamická třída pro plynulé přesuny PO načtení a PO resizu */
+        .povolit-animace .potomek-js {
+            transition: left 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
+                        top 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
+                        width 0.1s cubic-bezier(0.25, 1, 0.5, 1), 
+                        height 0.1s cubic-bezier(0.25, 1, 0.5, 1),
+                        opacity 0.3s ease, 
+                        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Třída pro zviditelnění po načtení */
+        .potomek-js.viditelny {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        
+         .potomek-js img {position: relative; width: 100%;
+          margin-top: 5px;
+           /*   margin-bottom: 5px;
+            padding: 10px; */
+            border-radius: 5px;
+    left: 50% !important;
+    transform: translate(-50%, 0%) ; 
+        }
+
+      /*  .potomek-js img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-top: 0px;
+        }*/
+
+        /* Načítací obrazovka */
+        #loading-obrazovka {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #111;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1abc9c;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            transition: opacity 0.5s ease, visibility 0.4s ease;
+        }
+        
+        #loading-obrazovka.skryt {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+
+     <div id="none" style="display:none;"></div>
+     
+    <div id="loading-obrazovka"></div>
+
+    <div id="rodic-kontejner">
+		
+        <div id="nadpis" class="potomek-js" style="
+        padding: 0px !important;
+            width:100%; min-width: 300px;
+            height:100%;min-height:500px;
+            margin-top: -50px !important;
+            ">
+        <div style="
+             text-align:center; 
+            width:100%; min-width: 300px;
+            height:100%;min-height:500px;
+            top: 0; left: 0;padding: 0px !important;
+  background: 
+    linear-gradient(rgba(248, 249, 250, 0.0), rgba(248, 249, 250, 1)), url('https://images.unsplash.com/photo-1574217013471-c32c6846cef7?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center / cover;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            ">
+
+             <div style="
+  font-size: 23px;
+  color: rgb(141, 190, 100);
+  text-align: center;
+  width: 300px;
+  height: 300px;
+  text-shadow: 0px 1px 2px white;
+  padding: 0px !important;
+  padding-top: 100px !important;
+  box-shadow: inset 0px 10px 100px 1px white;
+  border-radius: 300px;
+  margin-top: 30px;
+  background: #f3e0a880; backdrop-filter: blur(5px);
+            "> <h1 style="">Blog</h1>
+    <center style="font-size: 18px;padding:15px;font-weight:bold; color:rgb(109, 125, 97);
+  line-height: 150%;">Použijte vpravo dole stránkovač k procházení webu.</center>
+    </div></div>
+        </div>
+        
+        <div id="horizontala" class="potomek-js" style=" width: 2px; width: 90%; max-height: 600px;">
+        </div>
+        
+        <div id="vertikala" class="potomek-js" style=" width: 2px; height: 90%; max-height: 800px;">
+        </div>
+
+        <div id="1" class="potomek-js" style=" width: 600px; min-width:300px;">
+                <div>
+                <h3>1. Kousek štěstí</h3>
+                <div class="foto-popisek" style=" text-align:center !important;">(Dva příběhy od AI Google vyhledávač)</div>
+Mladý muž procházel lesem a trápil se otázkou: „Co je to vlastně smysl života a kde hledat štěstí?“ Potkal starého moudrého poustevníka, který mu podal malý, zářivý kámen. „Tohle je kámen mudrců. Dám ti ho, ale za dva týdny se sem vrať a přines mi ho zpět,“ řekl stařec. Mladík byl nadšený. Kámen měl obrovskou cenu a mohl si za něj koupit cokoliv. Dva týdny však nemohl myslet na nic jiného, než na to, že o poklad brzy přijde. Každou noc spal s kamenem pod polštářem a hlídal ho.
+<br> Po čtrnácti dnech se vrátil k poustevníkovi a kámen mu se smutkem v srdci vrátil. Stařec se usmál: „Vidíš? Ten kámen ti nepřinesl radost, jen starost. Chtěl jsem, abys místo něj našel něco jiného. Pochopil jsi, co to je?“ Mladík se zamyslel, podíval se na klidného poustevníka a odpověděl: „Ano, mistře. Pochopil. Opravdové štěstí a klid nejsou věci, které vlastníme, ale svoboda, kterou máme ve své mysli. Ta se koupit nedá.“
+                </div>
+                <div class="foto-popisek">
+                <h4>Lekce z psychologie</h4>
+Starší pán žil v domku vedle prázdného pozemku. Jednoho dne tam skupina kluků začala hrát fotbal. Každé odpoledne strašně křičeli a kopali do plechového plotu.Pána ten hluk strašně rozčiloval. Místo nadávání ale vymyslel plán.<br>
+ Vyběhl ven a klukům řekl: „Vy hrajete skvěle! Miluju ten zvuk, připomíná mi to mládí. Když sem přijdete zítra, dám každému z vás 20 korun.“Kluci byli nadšení. Druhý den křičeli a kopali do plotu ještě víc. Pán jim poctivě zaplatil. Další den ale vyšel ven smutný: „Kluci, inflace mě zasáhla, dnes vám můžu dát jen 10 korun.“Kluci trochu ohrnuli nos, ale peníze vzali a hráli dál. Čtvrtý den pán vyšel a povídá: „Už nemám peníze. Dnes vám můžu dát jen korunu.“ <br>
+ Hlavní kluk se na něj podíval, hodil míč pod paži a naštvaně řekl: „Tak to zapomeňte, dědo! Za jednu korunu se vám tady celej den v tom horku unavovat nebudeme!“ <br>
+ Odešli a starý pán měl od té doby svatý klid.
+                </div>
+                <div>
+	Vtip: Někdo touží mít velký dům, rychlé auto a spoustu peněz. Jiným stačí malá chata v lese co nejdál od těchto lidí… 
+                    </div>
+        <div>
+            <h3>Máj</h3>
+            <img style="background-color: #2980b9; max-width: 500px; min-width: 300px;" src="https://www.cestovinky.cz/sites/default/files/styles/medium/public/images/%5Buid%5D/shutterstock_496493986.jpg?h=a6124d9d&itok=HFku-jCT" alt="Foto">
+				<div class="foto-popisek">
+                    <b>Česko je sice malé, to mu ale neubírá nic na kráse. Našince i cizince u nás uchvátí hory, jezera, skalní města, lesy, hrady i zámky… </b>
+                     V přehlídce krásy nemůže chybět ani vyhlídka Máj, z níž se můžete pokochat pohledem na meandr Vltavy. Hluboký skalnatý kaňon nikdy nezklame, zvlášť když se ještě ohýbá do podkovy. Pro tuhle krásu stačí dojet do obce Teletín, odkud je to pěšky asi kilometr (a další zpátky).
+                </div>
+        </div>
+                <div>
+ <h3>Trampoty z Arktidy – Polární liška Elsa, co neměla ráda zimu</h3>
+
+Na severu za polárním kruhem žila polární liška Elsa se svou rodinou. Elsa byla nejmladší z pěti sourozenců. Žili v krásné útulné noře, kde měla každá lištička svůj pokojíček.
+ <br>
+Všichni sourozenci trávili celé dny venku, dováděli ve sněhu, skákali do vody a užívali si chladného počasí, které takhle daleko na severu vládne. Ale Elsa byla jiná. Neměla ráda sníh, neměla ráda ledovou vodu. Jejím největším snem bylo žít na místě, kde je teplo, svítí sluníčko a kde se může jít zchladit do mírně chladné vody.
+Pohádka pro děti - Trampoty z Arktidy – Polární liška Elsa, co neměla ráda zimu
+Trampoty z Arktidy – Polární liška Elsa, co neměla ráda zimu
+ <br>
+Elsa z toho byla hodně smutná. Měla pocit, že do rodiny nepatří. Naštěstí její sourozenci s ní měli opravdu soucit a nenutili ji chodit ven, když nechtěla. Elsa ale trávila celé dny zalezlá v teplé noře a byla hodně osamělá.
+ <br>
+„Elso, musíš mezi ostatní. Co tady celá dny sama děláš?“ ptala se nešťastně Elsina maminka. Občas, když maminka takto naléhala, se Elsa překonala a šla se sourozenci ven. Často ale tuto návštěvu chladné přírody odstonala.
+ <br>
+V okolí se dávno rozkřiklo, že liščí rodinka má ještě nejmladší dceru, kterou ale skoro nikdo nezná, protože nechodí ven. Liščí máma si taky občas postěžovala a ptala se sousedů v okolí na radu.
+ <br>
+Když jednou byla Elsa chvíli venku a choulila se do klubíčka kousek od svých sourozenců, přišel za ní pižmoň Béďa. Byl překvapený, že si Elsa nehraje s ostatními. Elsa mu povyprávěla, jaký má problém.
+ <br>
+„Víš, Béďo, a proto si nemůžu hrát se sourozenci venku. Mám pocit, že mi tlapičky přimrznou k zemi a už se nikdy nepohnu,“ vysvětlovala Elsa Béďovi.
+ <br>
+Béďa o Else dlouhé dny přemýšlel. Sám byl často vyřazován z kolektivu, protože ještě donedávna neuměl plavat. Rozuměl tomu, jak osaměle se Elsa musí cítit a chtěl jí nějak pomoct. Až na to nakonec kápl! Jeho babička, stará pižmoňka Henrieta, přece ráda plete.
+ <br>
+„Babičko moje nejmilejší!“ křičel Béďa už z dálky. Babička Henrieta už také špatně slyšela, bylo nutné zvýšit hlas. 
+ 
+„Babičko, byla bys tak hodná a upletla mojí kamarádce lišce Else svetr? Je jí velká zima, nemůže chodit ani ven,“ popsal Béďa babičce problém.
+ <br>
+Asi po týdnu usilovné práce přinesl Béďa lišce Else krásný huňatý pletený svetr, šál a čepici. Elsa tomu nápadu napřed moc nevěřila.
+ <br>
+„Když to nezkusím, tak to nezjistím,“ řekla si nakonec a vše si zkusila obléct. Najednou jí v noře začalo být až moc velké teplo, a tak vyběhla za svými sourozenci ven. Ti byli nadšení, když ji viděli. Elsa s nimi začala dovádět, běhat, koulovat se, válet sudy a vše, co nezbedné lišky ve volném čase rády dělají.
+ <br>
+Mamince lišce zaplesalo srdce radostí, když viděla, jak Elsa dovádí ve sněhu. Měla velký strach, že až Elsa dospěje, sbalí si kufry a odstěhuje se do teplých krajin. Co by si bez ní počala? Máma liška upekla koláče jako poděkování pro Béďu a jeho babičku Henrietu za ty krásné zimní kousky, které Else moc pomohly.
+ <br>
+Do vody se svými sourozenci sice neskákala, ale to jí vůbec nevadilo. Elsa byla najednou velmi šťastná. Všichni přece nemůžeme být stejní.
+                 </div>
+                <div>
+                <h3>Bláznivé opičky</h3>
+Byla jednou jedna džungle, ve které bychom kromě pestrobarevné přírody našli i jedovaté hady, hrozivé pavouky či všelijaké legrační žabky. V této zemi plné zeleně a barev žily i různé opičky, mezi nimiž byly tři nejlepší kamarádi. Jmenovali se Pip, Mip a malá Mima. Kamarádi v džungli vymýšleli všelijaké rošťárny a celá džungle se smála jejich vtípkům.
+ <br>
+Ve výškách se houpali na nejvyšších stromech nebo strašili zvířata, když na ně náhle vyskočili. Dokonce i velký slon Maron se polekal, když na něj ti tři nezbedníci zničehonic skočili a vyplašili ho. Každý den se džunglí kromě zvuků zvířat ozýval i jejich smích. Pip žongloval s kokosy a malý Mip se je snažil rychle chytit. Mezitím je malá Mima lechtala, až se všichni tři i s kokosy skutáleli na zem, kde se smáli tak, že jim tekly slzy. A takto to bylo každý den.
+Pohádka na dobrou noc - Bláznivé opičky
+Bláznivé opičky
+ <br>
+Dnešní den byl však jiný. Malý Pip a Mip se probudili ještě předtím, než sluníčko vykouklo zpoza stromů. Dnes totiž měla jejich kamarádka Mima narozeniny! Chtěli ji překvapit velkým, krásným banánovým dortem.
+ <br>
+Nasbírali ty nejzralejší a nejchutnější banány, poskládali je na sebe a vytvořili tak velký dort. Banánový dort ještě ozdobili květinami. Ale Pip a Mip měli v plánu i malý žertík. Chtěli předstírat, že na Mimininy narozeniny zapomněli.
+ <br>
+Když se Mima probudila a vykoukla ze svého brlohu, na větvi už na ni čekali její šibalští kamarádi.
+„Dobré ráno,“ řekl Mip a hlasitě zívl.
+„Dobré ráno, dnes bych jen polehával a nic nedělal,“ přidal se Pip a podrbal se na hlavě, předstíraje, že dnešek není nijak výjimečný.
+„Souhlasím, dnes nebudeme dělat nic, jen spát,“ přitakal Mip a znovu hlasitě zívl.
+ <br>
+Mima překvapeně pohlédla na své kamarády. Vždyť přece vědí, že má dnes narozeniny. Že by na ni zapomněli?
+„Jen polehávat a nic nedělat?“ zeptala se smutně a kamarádi přikývli a lehli si do svých postýlek, předstírajíce spánek.
+ <br>
+Malá opička se smutně odvrátila od svých kamarádů, vyšplhala na liánu a spustila se dolů. Tam si sedla na kámen a sledovala, jak si malé žabky hrají v kaluži. Byla smutná. Dnes měl být přece její den a její nejlepší kamarádi Pip a Mip na ni zapomněli. Malá Mima ani netušila, že ji Pip a Mip chtěli jen trochu potrápit a pak překvapit.
+ <br>
+Když Mima odešla, kamarádi vyskočili ze svých postýlek. Vzduch byl čistý a nastal čas na oslavu! Mip svolal všechny kamarády z džungle a Pip běžel pro dort, který ukryl v nedalekém keři.
+ <br>
+Když se Mima smutně dívala na žabky dovádějící v kaluži, najednou za sebou uslyšela hlasité zvolání:
+„Překvapení!“ zakřičeli Pip a Mip, držíce v ruce banánový dort. Vedle nich stály i jiné opice, dokonce i slon Maron s rodinou a přátelská puma Luna, která je vždy chránila před nebezpečím džungle. Všichni přišli malé Mimě poblahopřát.
+ <br>
+Miminy oči se rozzářily jako hvězdy na nebi. Začala radostí poskakovat.
+„Vy jste mě ale vylekali. Už jsem si myslela, že jste na mě zapomněli!“ zasmála se Mima a objala Pipa a Mipa. A oslava mohla začít. Zvířátka popřála malé opičce k narozeninám a všichni si společně dali lahodný banánový dort, pochutnali si na kokosech a veselili se.
+ <br>
+Džunglí se rozléhal smích všech zvířátek, která se na společné oslavě sešla a výborně se bavila. Mima na žertík svých kamarádů a velké překvapení jen tak nezapomene.
+                    </div>
+        <div>
+            <h4>Kde je podzim nejkrásnější? Tipy pro milovníky fotografování a přírody</h4>
+            <img style="background-color: #2980b9; max-width: 500px; min-width: 300px;" src="https://cdn.kudyznudy.cz/files/7a/7a5b2bcc-e86b-4041-9b84-a6b18fb2ae33.webp?v=20221001095025" alt="Foto">
+				<div class="foto-popisek">
+					Podzim, čas barevného listí... Pro někoho nastává období plískanic a splínů, pro milovníky přírody a fotografy ale začíná krátké období, kdy by venku nejraději trávili celé dny. I když máte svá oblíbená místa, kam se chodíte těšit z podzimních barev, naše tipy se vám možná budou hodit jako inspirace. A přibalte si foťáky i stativy, budete je potřebovat!
+                </div>
+        </div>
+                <div>
+
+            <h4>Do lesů, skal a svahů</h4>
+Nejkrásnější podzimní fotografie a výhledy vás čekají tam, kde jsou smíšené nebo listnaté lesy, obrovský efekt mají také modříny. Ideální proto jsou hory s dostatkem vyhlídek, tajným tipem pak bývají pískovcová skalní města. Kde? Třeba kolem Děčínského Sněžníku, Labské pískovce, Broumovské stěny nebo například Frýdlantské cimbuří.
+ <div>
+Březové a modřínové lesy, protkané spoustou stezek se stovkami vyhlídkových míst, najdete například v Tiských stěnách. Vyzkoušet můžete také známá místa Českého ráje, jako je například vyhlídka Kapelník a Taktovka na Hruboskalsku, krásné jsou výhledy z Hořákovy vyhlídky v Besedických skalách anebo z vrcholu Sokol na Suché skály, tamtéž.
+</div><div>
+Ulovit nádherné záběry můžete také v Českém středohoří s jeho impozantními sopečnými kužely; vyzkoušejte třeba vyšplhat na kopec Radobýl anebo si projít vyhlášené labské vyhlídky! Podobě lákavé jsou nejhezčí vyhlídky na Vltavu, kde se škála žlutých, oranžových a červených odstínů mísí s šedí skal a temnou zelení smrkového jehličí. Krásná však jsou také místa na Berounce, například v "srdíčko" Přírodním parku Horní Berounka, vyhlídka u hradu Krašova, Havlova skála u Liblína nebo Tetínské vyhlídky. 
+ </div><div>               
+                   <b>A pak je tu samozřejmě místo, kde řeka Vltava pramení: její veličenstvo Šumava.</b> Za pohádkovým podzimem se tady můžete vypravit kamkoliv, třeba do Povydří anebo na Pustý hrádek, odkud budete mít jako na dlani nejenom hrad Kašperk, ale také zlatem protkané jehličnaté lesy a do dálky se táhnoucí zvlněné šumavské kopce.
+ </div><div>
+Krásné záběry pořídíte mimo jiné u Jezerní slatě, na cestě k Poledníku, u Javoří slati, nad Plešným jezerem, u Mrtvého luhu, na Lenorských rechlích (krytý dřevěný most) a třeba také na vyhlídkových místech u Bučiny a Knížecích Pláních.
+ </div>
+                 </div>
+        </div>
+        
+         <div id="vertikala" class="potomek-js" style=" width: 2px; height: 90%; max-height: 800px;">
+        </div>
+        
+                <div id="horizontala" class="potomek-js" style="color:rgb(95, 95, 95); min-width: 300px; width: 50%; height: 60px;">
+            <h2 style="padding-bottom:5px;">Zprávy ze světa</h2> <small style="padding-bottom:15px;">(11.7.2026)</small>
+        </div>
+        
+        <div id="2" class="potomek-js" style="border: 1px solid #cbcaca;background-color: rgb(231, 240, 238); min-width: 300px; min-height: 150px;">
+            <div><b>2. Krize na Blízkém východě:</b> </br>Napětí mezi USA a Íránem po předchozích úderech v Hormuzském průlivu mírně opadlo a mezinárodní zprostředkovatelé se intenzivně pokoušejí o deeskalaci. Lodní doprava v oblasti je však stále výrazně ochromena.</div>
+        </div>
+        
+        <div id="3" class="potomek-js" style="border: 1px solid #cbcaca;background-color: rgb(240, 234, 231); width: 30%; min-width: 300px; max-width: 500px;">
+            <div><b>3. Situace v Libanonu:</b> </br>Izraelský premiér Benjamin Netanjahu navštívil jednotky v jižním Libanonu a prohlásil, že vojenská přítomnost bude pokračovat, dokud bude Hizballáh představovat hrozbu.</div>
+        </div>
+ 
+        <div id="4" class="potomek-js" style="border: 1px solid #cbcaca;background-color: rgb(234, 238, 242); min-width: 300px; max-width: 350px; min-height: 250px; max-height: 400px;">
+            <div><h4>4. <span style="text-shadow: 1px 1px 4px #0000007d;"> 🌪️</span> Klima a přírodní katastrofy</h4>
+             <b>Požáry v jižní Evropě:</b> Španělskou Andalusii zasáhly ničivé lesní požáry nevídané síly. Tragédie si vyžádala už nejméně 12 obětí z řad místních i turistů.<br>
+              <b>Zemětřesení ve Venezuele:</b> Satelitní snímky odhalily, že nedávná zemětřesení v zemi poškodila přes 58 000 budov a těžce zasáhla tamní komunity.</div>
+        </div>
+<!--
+background-color: rgb(180, 213, 234);
+-->
+        <div id="5" class="potomek-js" style=" width: 100%; max-width: 450px; min-width: 250px;">
+            <div>5. Nejkrásnější místa na světě</div>
+            <img src="https://media.loupak.fun/soubory/obrazky/g_Moortisek/37cdb39f9ef23660e11d5d37176d1250//d5dd850dd78fa7ba1378e0af036e8d7ae829567f.jpg" alt="Foto">
+        </div>
+        
+        
+
+        <div id="6" class="potomek-js" style="background-color: rgb(230, 185, 249);
+  height:450px;
+  width:350px;
+  max-width:350px;
+  min-height:450px;">
+  <div><center>6. Mapy Google</center></div>
+  <div id="loader" class="loadertext" style="
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: sans-serif;
+  font-size: 16px;
+  color: #555555;
+  text-align: center;
+  z-index: 1;" >
+    Posečkejte prosím, právě probíhá stahování dat.
+  </div>
+  <iframe data-src="https://maps.google.com/maps?&q=Národní přírodní rezervace Soos, okres Cheb, Karlovarský kraj, Česko&z=13&t=w&output=embed" id="mapa" loading="lazy" frameborder="0" style="
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  height:400px;
+  width:350px;
+  max-width:350px;
+  min-height:400px;" src=""></iframe>
+        </div>
+        
+        
+
+        <div id="7" class="potomek-js" style="background-color: rgb(168, 221, 211);
+  max-width:350px;
+  width:350px;
+  min-height:450px;
+  height:450px;">
+  <div><center>7. YouTube</center></div>
+  <div id="loader1" class="loadertext" style="
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: sans-serif;
+  font-size: 16px;
+  color: #555555;
+  text-align: center;
+  z-index: 1;" >
+    Posečkejte prosím, právě probíhá stahování dat.
+  </div>
+<iframe style="
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;"  data-src="https://www.youtube.com/embed/OFC_c42Z1MU?si=NFJ0-GsUEwCpx05V" id="youtube" loading="lazy" width="350" height="400" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+        
+        
+         
+         <div id="8" class="potomek-js" style="border: 1px solid #cbcaca;background-color: rgb(246, 241, 239); width: 30%; min-width: 250px; max-width: 500px;">
+            <div><h4>8. Růžička</h4>
+<p style="text-align: center;">Viděl chlapec rozkvítat<br>
+planou růži v stráni,<br>
+viděl na ní rosu stát,<br>
+rozběh se z ní radovat,<br>
+podívat se na ni.<br>
+Růže, růže, růžičko,<br>
+rudá růže v stráni!<br>
+<br>
+„Utrhnu tě, růže, tam,<br>
+utrhnu tě v stráni!“ –<br>
+„Já tě, hochu, popíchám,<br>
+památku ti provždy dám,<br>
+nejsem na trhání.“<br>
+Růže, růže, růžičko,<br>
+rudá růže v stráni!<br>
+<br>
+A ten divoch, má milá,<br>
+utrhne ji v stráni;<br>
+třebaže se bránila,<br>
+do krve ho ranila,<br>
+marně se mu brání.<br>
+Růže, růže, růžičko,<br>
+rudá růže v stráni!
+</p></div>
+        </div>
+
+        <div id="9" class="potomek-js" style="background-color: rgb(81, 181, 123); width: 400px; min-width:300px;">
+            <div style="width: 100%; color: white;padding:0px;" data-nezlomny="true">
+                <h4 style="">9. Formulář</h4>
+
+<div class="main-center">
+    <!-- Author: FormBold Team -->
+    <!-- Learn More: https://formbold.com -->
+    <div class="form-container" >
+        <img
+            src="https://ucarecdn.com/412d5bde-bec7-49c8-94c9-f6df6434ed12/address.png"
+            alt="Address Form Image"
+            class="form-img"
+        />
+        <form
+            action="https://form.com/FORM_ID"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+            <div style="margin-bottom: 2rem">
+                <h2 class="form-title">Adresní formulář</h2>
+                <p class="form-desc">
+                    Uveďte níže své údaje o adrese. Pole označená * jsou povinná.
+                </p>
+            </div>
+
+            <label for="fullname" class="form-label">Celé jméno*</label>
+            <input
+                type="text"
+                name="fullname"
+                id="fullname"
+                class="form-input"
+                placeholder="Vložte celé jméno"
+                required
+            />
+
+            <label for="email" class="form-label">Email*</label>
+            <input
+                type="email"
+                name="email"
+                id="email"
+                class="form-input"
+                placeholder="Vložte svůj email"
+                required
+            />
+
+            <label for="phone" class="form-label"
+                >Telefon (Volitelné)</label
+            >
+            <input
+                type="tel"
+                name="phone"
+                id="phone"
+                class="form-input"
+                placeholder="Vložte svůj telefon"
+            />
+
+            <label for="address-line-1" class="form-label"
+                >Adresa*</label
+            >
+            <input
+                type="text"
+                name="address-line-1"
+                id="address-line-1"
+                class="form-input"
+                placeholder="Číslo domu, jméno ulice"
+                required
+            />
+            
+            <label for="city" class="form-label">Město*</label>
+            <input
+                type="text"
+                name="city"
+                id="city"
+                class="form-input"
+                placeholder="Město"
+                required
+            />
+
+            <label for="postal-code" class="form-label"
+                >Poštovní směrovací číslo*</label
+            >
+            <input
+                type="text"
+                name="postal-code"
+                id="postal-code"
+                class="form-input"
+                placeholder="Poštovní směrovací číslo"
+                required
+            />
+
+            <label for="country" class="form-label">Stát*</label>
+            <select name="country" id="country" class="form-select" required>
+                <option value="Czech">Česko</option>
+                <option value="India">Indie</option>
+                <option value="USA">USA</option>
+                <option value="UK">Velká Británie</option>
+                <option value="Canada">Kanada</option>
+                <option value="Australia">Austrálie</option>
+            </select>
+
+            <label for="purpose" class="form-label"
+                >Účel formuláře (Volitelné)</label
+            >
+            <select name="purpose" id="purpose" class="form-select">
+                <option value="new-address">Nová adresa</option>
+                <option value="address-update">Změna adresy</option>
+                <option value="delivery-address">Doručovací adresa</option>
+                <option value="permanent-address">Trvalá adresa</option>
+            </select>
+
+            <label for="proof-of-address" class="form-label"
+                >Doklad o adrese (volitelné)</label
+            >
+            <input
+                type="file"
+                name="proof-of-address"
+                id="proof-of-address"
+                accept=".pdf,.jpg,.jpeg,.png"
+                class="form-file"
+            />
+
+            <div class="form-checkbox-row">
+                <input
+                    type="checkbox"
+                    id="declaration"
+                    class="form-checkbox"
+                    required
+                />
+                <label
+                    for="declaration"
+                    style="margin: 0; font-weight: 500"
+                    class="form-label"
+                >
+                    Potvrzuji, že tato adresa je přesná a aktualizovaná podle mého nejlepšího svědomí.
+                </label>
+            </div>
+            <button class="form-btn">Potvrzení adresy</button>
+        </form>
+    </div>
+</div>
+            </div>
+        </div>
+
+<div id="10" class="potomek-js" style="border: 1px solid #0000004d;background-color: rgb(229, 234, 238);width: 700px; min-width: 350px;">
+    <div>
+    <h2>10. Globální index teploty pevniny a oceánu.</h2>
+    <br>
+    <p>Tato tabulka je takzvaný <strong>NASA GISTEMP (Global Land-Ocean Temperature Index)</strong> a představuje historický vývoj globálních odchylek teploty (odchylek od dlouhodobého normálu) na pevnině i v oceánech od roku 1880. Pro správné čtení a pochopení tabulky je nejdůležitější znát základní pravidlo pro přepočet hodnot a význam jednotlivých sloupců.</p>
+    
+    <hr>
+    
+    <h3>1. Základní pravidlo: Jak číst čísla v tabulce</h3>
+    <ul>
+        <li><strong>Jednotky (setiny °C):</strong> Všechna čísla v tabulce jsou uvedena v <strong>0,01 °C</strong> (setinách stupně Celsia). Aby tabulka byla přehledná a nezabírala tolik místa, nejsou v ní psána desetinná místa ani stupně.</li>
+        <li><strong>Přepočet:</strong> Pro získání reálné teplotní odchylky ve stupních Celsia musíte jakoukoliv hodnotu v tabulce <strong>vydělit 100</strong>.
+            <ul>
+                <li><em>Příklad z tabulky:</em> Hodnota <code>40</code> znamená odchylku <strong>+0,40 °C</strong>.</li>
+                <li><em>Příklad se záporným číslem:</em> Hodnota <code>-19</code> znamená odchylku <strong>-0,19 °C</strong>.</li>
+            </ul>
+        </li>
+        <li><strong>Referenční období (1951–1980):</strong> Odchylky se nepočítají od absolutní nuly, ale od průměrné teploty, která panovala v letech <strong>1951 až 1980</strong>.
+            <ul>
+                <li>Kladné číslo (např. <code>119</code> v červenci 2023) znamená, že dané období bylo o <strong>1,19 °C teplejší</strong> než průměr z let 1951–1980.</li>
+                <li>Záporné číslo znamená, že bylo chladněji než tento dlouhodobý průměr.</li>
+            </ul>
+        </li>
+        <li><strong>Chybějící data:</strong> Symbol <code>****</code> (hvězdičky) označuje měsíce nebo období, pro která data chybí nebo (jako v případě probíhajícího roku 2026) ještě nenastala.</li>
+    </ul>
+    
+    <hr>
+    
+    <h3>2. Vysvětlení všech sloupců v tabulce</h3>
+    <p>Tabulka je rozdělena do několika logických částí:</p>
+    
+    <h4>A) Časové určení</h4>
+    <ul>
+        <li><strong><code>Year</code> (1. a 20. sloupec):</strong> Kalendářní rok, ke kterému se data vztahují (od 1880 po současnost). Pro snazší orientaci v širokém řádku je rok zopakován i na úplném konci řádku.</li>
+    </ul>
+    
+    <h4>B) Jednotlivé měsíce (2. až 13. sloupec)</h4>
+    <ul>
+        <li><strong><code>Jan</code> až <code>Dec</code> (Leden až Prosinec):</strong> Každý z těchto dvanácti sloupců ukazuje globální teplotní odchylku pro konkrétní měsíc daného roku.</li>
+    </ul>
+    
+    <h4>C) Roční průměry (14. a 15. sloupec)</h4>
+    <ul>
+        <li><strong><code>J-D</code> (Jan–Dec / Kalendářní rok):</strong> Průměrná teplotní odchylka za celý kalendářní rok, tedy od ledna do prosince daného řádku.</li>
+        <li><strong><code>D-N</code> (Dec–Nov / Meteorologický rok):</strong> Průměrná odchylka počítaná od prosince <em>předchozího</em> roku do listopadu daného roku. Tuto metodiku klimatologové často používají proto, aby roční průměr pokrýval ucelené roční období (celou zimu v kuse).</li>
+    </ul>
+    
+    <h4>D) Roční období / Sezóny (16. až 19. sloupec)</h4>
+    <p>Meteorologická roční období jsou v tabulce označena zkratkami počátečních písmen anglických názvů měsíců:</p>
+    <ul>
+        <li><strong><code>DJF</code> (December, January, February – Zima):</strong> Průměr za prosinec předchozího roku, leden a únor daného roku. <em>Poznámka:</em> Proto má rok 1880 u sloupce DJF hvězdičky (<code>****</code>), protože data za prosinec 1879 nejsou v tabulce k dispozici.</li>
+        <li><strong><code>MAM</code> (March, April, May – Jaro):</strong> Průměrná odchylka za březen, duben a květen.</li>
+        <li><strong><code>JJA</code> (June, July, August – Léto):</strong> Průměrná odchylka za červen, červenec a srpen.</li>
+        <li><strong><code>SON</code> (September, October, November – Podzim):</strong> Průměrná odchylka za září, říjen a listopad.</li>
+    </ul>
+    
+    <hr>
+    
+    <h3>3. Praktická ukázka: Jak si data vyložit</h3>
+    <p>Podívejme se společně na řádek pro rok <strong>2023</strong>:</p>
+    <pre style="overflow-y: scroll;overflow-x: scroll;height: 50px;border-radius:5px;border: 1px solid black"><code>Year   Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec    J-D D-N    DJF  MAM  JJA  SON  Year</code>
+<code>2023    87   96  123   98   94  108  119  119  148  134  140  135    117 112     88  105  115  141  2023</code></pre>
+    <ul>
+        <li><strong>Září 2023 (<code>Sep</code>):</strong> Hodnota je <code>148</code>. Po vydělení stem zjistíme, že září 2023 bylo globálně o <strong>+1,48 °C teplejší</strong> než průměrné září v letech 1951–1980.</li>
+        <li><strong>Celý rok 2023 (<code>J-D</code>):</strong> Hodnota je <code>117</code>. Globální průměrná odchylka za celý kalendářní rok 2023 byla <strong>+1,17 °C</strong>.</li>
+        <li><strong>Podzim 2023 (<code>SON</code>):</strong> Hodnota je <code>141</code>. Podzimní měsíce (září až listopad) byly v průměru o <strong>+1,41 °C teplejší</strong> než normál.</li>
+    </ul>
+    <p>Když tabulku projdete odshora dolů, jasně uvidíte dlouhodobý klimatický trend: v 19. a na začátku 20. století převažují záporné hodnoty se znaménkem minus (bylo chladněji než v polovině 20. století), zatímco v posledních dekádách hodnoty prudce rostou do vysokých kladných čísel.</p>
+   <b> Hodnoty v 0,01 °C (dělte 100 pro °C). Základ: 1951-1980. Zdroje: GHCN-v4 + SST: ERSST v5., 
+    <br>
+    <a href="https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt" target="blank">https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt</a> <b>
+    
+</div>
+
+<div class="container" style="padding: 0px;position:relative;">
+    <div id="scrol" data-nezlomny="true" style="overflow-y: scroll;overflow-x: scroll;padding: 0px;height: 370px;">
+    <div id="table-wrapper" style="padding: 0px;max-width: 1200px; margin: 0 auto;">
+    </div>
+    </div>
+
+    <div data-nezlomny="true"  style="padding: 0px;">
+    <h4 style="" >Vizualizace vývoje v průběhu roku</h4>
+    <div class="canvas-container" style="padding: 0px;">
+        <canvas id="myChart" width="600" height="500"></canvas>
+            <div  id="chart-tooltip"></div>
+    </div>
+    </div>
+</div>
+</div>
+
+        <div id="11" class="potomek-js" style="background-color:rgb(237, 241, 244); width: 100%; max-width: 400px; min-width: 300px;">
+			<div>
+            <h4>11. Architektura Prahy</h4>
+            <img style="max-width: 400px; min-width: 300px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1d403kydI5g3ExJiiJegbFVgAwFfAr-hrZcd6u1vxbpESmRttI_-xDUkk&s=10" alt="Foto">
+				<div class="foto-popisek">
+Architektura Prahy bývá často nazývána „učebnicí architektury pod širým nebem“. Město se pyšní unikátní směsicí všech hlavních evropských slohů – od románských rotund, gotických chrámů a barokních paláců až po jedinečný český kubismus, funkcionalismus a brutalismus. Pokud se chcete ponořit do bohaté historie pražských staveb, toto jsou klíčové styly, které město formovaly: <br> 
+<b>Gotika:</b> Období Karla IV. dalo Praze nezaměnitelnou siluetu. Dominanty jako Karlův most, Chrám sv. Víta na Pražském hradě nebo Staroměstská radnice definují historické centrum. <br>
+<b>Baroko:</b> Po třicetileté válce zažila Praha mohutnou stavební vlnu. Křivky paláců a kostelů jsou k vidění na Malé Straně (chrám sv. Mikuláše) a v monumentálním Klementinu. <br>
+<b>Kubismus a rondokubismus:</b> Světový unikát, který jinde nenajdete. V Praze vznikla celá řada těchto staveb v čele s Dům U Černé Matky Boží nebo palác Adria. <br>
+<b>Secese:</b> Na přelomu 19. a 20. století vyrostly stavby s bohatou výzdobou, jako je Obecní dům. <br>
+<b>Funkcionalismus:</b> Moderní meziválečný směr vtiskl Praze tvář zejména díky Veletržnímu paláci či vile Müller. 
+                </div>
+             </div>
+        </div>
+        
+    </div>
+
+
+<style>
+.form-btn,.form-desc,.form-title{text-align:center}body{font-family:Inter,sans-serif;background-color:#f3f4f6;margin:0;padding:0}.main-center{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;box-sizing:border-box}.form-container{margin:0 auto;max-width:570px;width:100%;background:#fff;padding:2.5rem;border-radius:.75rem;box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}.form-img{display:block;margin-left:auto;margin-right:auto;margin-bottom:2rem;width:100%;max-width:200px;height:auto}.form-title{font-size:1.875rem;font-weight:700;color:#111827;margin-bottom:.5rem}.form-desc{color:#6b7280;margin-bottom:2rem;font-size:.875rem;line-height:1.5}.form-label{display:block;margin-bottom:.5rem;font-size:.875rem;font-weight:600;color:#374151}.form-input,.form-select{width:100%;padding:.875rem 1.25rem;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;font-weight:500;font-size:1rem;color:#111827;outline:0;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;margin-bottom:1.25rem}.form-input::placeholder{color:#9ca3af}.form-input:focus,.form-select:focus{border-color:#6a64f1;box-shadow:0 0 0 3px rgba(106,100,241,.2)}.form-file{display:block;width:100%;margin-bottom:1.25rem;font-size:.875rem;color:#374151}.form-file::file-selector-button{margin-right:1rem;padding:.5rem 1rem;border:1px solid #d1d5db;border-radius:.375rem;background-color:#f9fafb;color:#374151;font-weight:500;cursor:pointer;transition:background-color .2s}.form-file::file-selector-button:hover{background-color:#f3f4f6}.form-checkbox-row{display:flex;align-items:flex-start;gap:.75rem;margin-top:1.5rem;margin-bottom:1.5rem}.form-checkbox{margin-top:.125rem;height:1.25rem;width:1.25rem;border-radius:.25rem;border:1px solid #d1d5db;cursor:pointer;flex-shrink:0}.form-checkbox:checked{background-color:#6a64f1;border-color:#6a64f1}.form-btn{width:100%;font-size:1rem;border-radius:.5rem;padding:.875rem 1.5rem;border:none;font-weight:600;background-color:#6a64f1;color:#fff;cursor:pointer;margin-top:1.5rem;transition:background-color .2s,box-shadow .2s}.form-btn:hover{background-color:#5a54d1;box-shadow:0 4px 12px rgba(0,0,0,.1)}@media (max-width:600px){.main-center{padding:1rem}.form-container{padding:1.5rem}.form-title{font-size:1.5rem}}
+</style>
+
+
+    <style>
+        //.info-box { background: #fff; border-left: 4px solid #0d6efd; padding: 15px; margin-bottom: 30px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 15px; }
+        
+       
+        table { width: 100%; border-collapse: collapse; font-size: 18px; min-width: 1000px; }
+        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #38577775; border-right: 1px solid #3857777a; }
+        
+        th { background-color: #f1f3f5; position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; font-weight: 600; box-shadow: inset 0 -15px 10px 0px #38587721; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        th:hover { background-color: #e9ecef; }
+        
+        //.chart-wrapper { background: #fff; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; position: relative; margin-bottom: 30px; }
+        .canvas-container { width: 100%; position: relative; }
+        canvas { width: 100%; height: auto; display: block; background: #ffffff; cursor: crosshair; }
+        
+        #chart-tooltip { position: absolute; background: rgba(33, 37, 41, 0.9); color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 12px; pointer-events: none; display: none; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: 500; }
+    </style>
+
+<script>
+	
+var specialColors = {};
+
+var nejrok = '';
+
+var rawData = "";
+
+async function nacit_a_zpracuj_data() {
+    const url = 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt';
+    // Použití proxy kvůli obejití CORS ochrany NASA
+   const proxyUrl = "https://corsproxy.io/?url=" + encodeURIComponent(url) ;
+    try {
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('Nepodařilo se stáhnout data.');
+        const textData = await response.text();
+        extrahujPozadovaneRoky(textData);
+    } catch (error) {
+        console.error('Chyba při stahování:', error);
+        alert('Chyba při stahování dat. Dočasně se použijí fixní data.');
+    }
+}
+
+// 2. Extrakční funkce, která vybere 5 posledních let a každý 10. rok zpět
+function extrahujPozadovaneRoky(cistyText) {
+    const lines = cistyText.split('\n');
+    const nalezeneRoky = {};
+    let hlavickaLine = '';
+
+    // Projdeme řádky a najdeme ty, které začínají regulérním rokem
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        const parts = trimmed.split(/\s+/);
+        const prvniSloupec = parseInt(parts[0]);
+
+        // Pokud řádek začíná čtyřmístným číslem (rokem)
+        if (!isNaN(prvniSloupec) && parts[0].length === 4) {
+            nalezeneRoky[prvniSloupec] = trimmed;
+        }
+        // Zachytíme řádek s měsíci pro hlavičku
+        if (trimmed.startsWith('Year') && !hlavickaLine) {
+            hlavickaLine = trimmed;
+        }
+    });
+
+    // Seřadíme všechny dostupné roky od nejnovějšího
+    const vsechnyRokyPole = Object.keys(nalezeneRoky).map(Number).sort((a, b) => b - a);
+    if (vsechnyRokyPole.length === 0) return;
+
+    const nejnovejsiRok = vsechnyRokyPole[0]; // Dynamicky určený nejnovější rok (např. 2026)
+    const vybraneRokyMnozina = new Set();
+
+    // A: Přidáme posledních 5 let (včetně nejnovějšího)
+    for (let i = 0; i < 5; i++) {
+        const r = nejnovejsiRok - i;
+        if (nalezeneRoky[r]) vybraneRokyMnozina.add(r);
+    }
+
+    // B: Přidáme každý 10. rok zpět až do minulosti
+    for (let r = nejnovejsiRok; r >= vsechnyRokyPole[vsechnyRokyPole.length - 1]; r -= 10) {
+        if (nalezeneRoky[r]) vybraneRokyMnozina.add(r);
+    }
+
+    // Seřadíme vybrané roky vzestupně, abychom sestavili finální text
+    const serazeneVybraneRoky = Array.from(vybraneRokyMnozina).sort((a, b) => a - b);
+    
+    // Sestavení dynamického rawData textu
+    let vygenerovaneRawData = '';
+    serazeneVybraneRoky.forEach(r => {
+        vygenerovaneRawData += nalezeneRoky[r] + '\n';
+    });
+    // Na konec přidáme hlavičku
+    vygenerovaneRawData += hlavickaLine + '\n';
+
+    // Generování barev pro 5 posledních let
+    const vygenerovaneSpecialColors = {};
+    const paletaProPoslednich5 = ['#000000', '#ffc107', '#dc3545', '#0dcaf0', '#198754']; // Černá, Žlutá, Červená, Tyrkysová, Zelená
+    
+    for (let i = 0; i < 5; i++) {
+        const r = nejnovejsiRok - i;
+        vygenerovaneSpecialColors[r.toString()] = paletaProPoslednich5[i];
+    }
+    rawData = vygenerovaneRawData;
+specialColors = vygenerovaneSpecialColors;
+nejrok = nejnovejsiRok;
+var parsed = parseData(rawData);
+generateTable(parsed);
+drawCanvasChart(parsed);
+scrolniTabulku();
+}
+
+const czechMonths = ["Led", "Úno", "Bře", "Dub", "Kvě", "Čer", "Čec", "Srp", "Zář", "Říj", "Lis", "Pro"];
+
+function parseData(text) {
+    const lines = text.trim().split('\n').map(line => line.trim().split(/\s+/));
+    const headerLine = ["Rok", ...czechMonths, "J-D", "D-N", "DJF", "MAM", "JJA", "SON"];
+    const dataLines = lines.filter(l => !isNaN(l[0]));
+    return { headers: headerLine, rows: dataLines };
+}
+
+// 3. Dynamický výpočet barvy (od hluboké modré po sytě červenou)
+function getColorForYear(yearStr) {
+    //const specialColors = {'2021': '#fd7e14', '2022': '#198754', '2023': '#0dcaf0', '2024': '#dc3545', '2025': '#ffc107', '2026': '#000000'};
+    if (specialColors[yearStr]) return specialColors[yearStr];
+    const year = parseInt(yearStr);
+    if (isNaN(year)) return '#333333';
+    
+    const minYear = 1886;
+    const maxYear = nejrok;
+    
+    // Procento posunu na časové ose (0.0 až 1.0)
+    const factor = (year - minYear) / (maxYear - minYear);
+    
+    // Odstín HSL: 240 (modrá) se snižuje až k 0 (červená)
+    const hue = Math.round(240 - (factor * 240));
+    const saturation = Math.round(60 + (factor * 30)); // 60% až 90%
+    const lightness = Math.round(40 + (factor * 10));   // 40% až 50%
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+function generateTable(parsedData) {
+    const wrapper = document.getElementById('table-wrapper');
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trHead = document.createElement('tr');
+    
+    parsedData.headers.forEach((h, index)  => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        th.addEventListener('click', () => sortTable(table, index));
+        trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    parsedData.rows.forEach(rowData => {
+        const tr = document.createElement('tr');
+        rowData.forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+}
+
+// 5. Řazení tabulky na kliknutí
+let sortDirection = true;
+function sortTable(table, colIndex) {
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        let valA = a.children[colIndex].textContent.trim();
+        let valB = b.children[colIndex].textContent.trim();
+
+        if (valA === '****' || valA === '***') return sortDirection ? 1 : -1;
+        if (valB === '****' || valB === '***') return sortDirection ? -1 : 1;
+
+        if (!isNaN(valA) && !isNaN(valB)) {
+            return sortDirection ? parseFloat(valA) - parseFloat(valB) : parseFloat(valB) - parseFloat(valA);
+        }
+        return sortDirection ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+
+    sortDirection = !sortDirection;
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+let clickTargets = [];
+
+function drawCanvasChart(parsedData) {
+    const canvas = document.getElementById('myChart');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('chart-tooltip');
+    const isMobile = window.innerWidth < 768;
+    
+    const paddingLeft = 50, paddingRight = isMobile ? 30 : 130, paddingTop = 40, paddingBottom = isMobile ? 150 : 50;
+    const chartWidth = canvas.width - paddingLeft - paddingRight;
+    const chartHeight = canvas.height - paddingTop - paddingBottom;
+
+    const datasets = parsedData.rows.map(row => ({
+        year: row[0],
+        data: row.slice(1, 13).map(val => (val === '****' || isNaN(val)) ? null : parseFloat(val))
+    }));
+
+    const allValues = datasets.flatMap(d => d.data).filter(v => v !== null);
+    const minY = Math.min(...allValues) - 10, maxY = Math.max(...allValues) + 10;
+    const yRange = maxY - minY;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    clickTargets = [];
+
+    // Osa Y
+    ctx.strokeStyle = '#e9ecef';
+    ctx.fillStyle = '#013664';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+        const yVal = minY + (yRange / 5) * i;
+        const yPos = canvas.height - paddingBottom - (i * chartHeight / 5);
+        ctx.beginPath(); ctx.moveTo(paddingLeft, yPos); ctx.lineTo(canvas.width - paddingRight, yPos); ctx.stroke();
+        ctx.fillText((yVal / 100).toFixed(1) + ' °C', paddingLeft - 8, yPos + 4);
+    }
+
+    // Osa X
+    ctx.textAlign = 'center';
+    czechMonths.forEach((month, idx) => ctx.fillText(month, paddingLeft + idx * (chartWidth / 11), canvas.height - paddingBottom + 20));
+
+    // Čáry
+    datasets.forEach(dataset => {
+        ctx.strokeStyle = getColorForYear(dataset.year);
+        ctx.lineWidth = dataset.year === nejrok ? 4 : parseInt(dataset.year) >= 2021 ? 3 : 2; // Ztlustíme aktuální rok 2026
+        ctx.beginPath();
+        let first = true;
+        dataset.data.forEach((val, idx) => {
+            if (val === null) return;
+            const x = paddingLeft + idx * (chartWidth / 11);
+            const y = canvas.height - paddingBottom - ((val - minY) / yRange * chartHeight);
+            first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            first = false;
+            clickTargets.push({x, y, year: dataset.year, month: czechMonths[idx], value: (val/100).toFixed(2)});
+        });
+        ctx.stroke();
+    });
+
+    // Legenda
+    datasets.forEach((dataset, idx) => {
+        const color = getColorForYear(dataset.year);
+        const xPos = isMobile ? paddingLeft + (idx % 4) * 80 : canvas.width - paddingRight + 20 + (idx >= 10 ? 60 : 0);
+        const yPos = isMobile ? canvas.height - paddingBottom + 40 + Math.floor(idx / 4) * 20 : paddingTop + (idx % 10) * 24;
+        ctx.fillStyle = color; ctx.fillRect(xPos, yPos, 10, 10);
+        ctx.fillStyle = '#000'; ctx.fillText(dataset.year, xPos + 27, yPos + 10);
+    });
+
+    canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+        let found = clickTargets.find(t => Math.hypot(mx - t.x, my - t.y) < 15);
+        if (found) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (found.x * (rect.width / canvas.width)) + 'px';
+            tooltip.style.top = (found.y * (rect.height / canvas.height) - 30) + 'px';
+            tooltip.innerHTML = `<strong>${found.year} ${found.month}</strong>: ${found.value} °C`;
+        } else tooltip.style.display = 'none';
+    };
+}
+// Tuto funkci zavolejte hned po vygenerování tabulky
+function scrolniTabulku() {
+  // setTimeout s 0 ms zajistí, že se kód spustí až PO vykreslení tabulky prohlížečem
+  setTimeout(() => {
+    const kontejner = document.getElementById('scrol');
+    
+    if (kontejner) {
+      kontejner.scrollTop = kontejner.scrollHeight; // Skroluje úplně dolů
+      kontejner.scrollLeft = 0;                     // Skroluje úplně doleva
+    }
+  }, 10);
+}
+
+</script>  
+
+<script>
+var GLOBAL_NASTAVENI = {
+
+    vychoziMinSirka: 2,
+    vychoziMaxSirka: 2500,
+    vychoziMinVyska: 2,
+    vychoziMaxVyska: 5000,
+    gap: 5,                           // Zkus nastavit na 0, už to nebude kmitat.
+    strankovac: true,                  // NOVÉ: Zapíná automatické dělení dlouhých bloků
+    zpusobRazeni: 'striktne',             // 'volne' | 'striktne'
+    zarovnaniKontejneru: 'stred',      // 'stred' | 'vlevo'
+    
+    // EXPANZE (Růst)
+    faktorZvetseniDoGap: 0.0,          // Kolik volného místa modul vyplní (0 = nic, 1 = vše)
+    smerZvetseni: 'oba',               // 'sirka' | 'vyska' | 'oba'
+    zachovatPomerStran: false,          // NEFUNGUJE: Pokud roste do šířky, vyroste proporcionálně i do výšky (ideální pro obrázky)
+    
+    // CENTROVÁNÍ 
+    horizontalniCentrovani: true,      
+    vertikalniCentrovani: true,        
+    
+    // POKROČILÁ FYZIKA (Nevizuální limity pro výpočetní výkon. Celý proces běží skrytě v 1 milisekundě)
+    pruznostRelaxace: 0.9,             // 0.1 až 1.0. Menší číslo = přesnější centrovaní u velmi složitých layoutů, ale trvá to více iterací.
+    maxIteraci: 10                     // Kolikrát se smějí prvky před vykreslením na obrazovku navzájem posunout/odtlačit.                
+};
+
+var GLOBAL_NAVIGACE = { celkemStran: 1, aktualniStranka: 0, probihaPrechod: false };
+
+var navStylyCSS = `
+#nav-ovladani {
+    position: fixed; bottom: 10px; right: 10px; z-index: 10000;
+    display: flex; gap: 10px; align-items: center;
+    /*! background: rgba(26, 26, 26, 0.92); */ padding: 4px 8px;
+    border-radius: 20px; /*! box-shadow: 0 4px 15px rgba(0,0,0,0.7); */
+    /*! border: 1px solid #333; */ backdrop-filter: blur(5px);
+}
+.nav-btn {
+    background: #0679ec; color: white; border: none;
+    padding: 4px 7px; border-radius: 30px; cursor: pointer;
+    font-family: open sans, sans-serif; font-size: 19px; font-weight: bold;
+    transition: box-shadow 0.3s, border 0.3s, text-shadow 0.3s, background 0.3s, transform 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    border: 1px solid #3333335e;
+    text-shadow: 0px 1px 3px #000000b5;
+}
+.nav-btn:hover { background: #245382; /*! text-shadow: 0px 1px 2px #000000b5; */}
+.nav-btn:active { transform: scale(0.95); }
+.nav-btn.vypnuto { opacity: 0.25; pointer-events: none; }
+#btn-stranky { background: #16a085; min-width: 75px; text-align: center; }
+#btn-stranky:hover { background: #0b7760; text-shadow: 0px 1px 2px #0000006b;border: 1px solid #3333331c;box-shadow: 0 2px 7px rgba(0, 0, 0, 0.65);}
+
+
+#menu-stranek {
+    position: fixed; bottom: 46px;
+    /*! background: #3e7e5d54; */ /* border: 1px solid #4440; */ padding: 8px;
+    border-radius: 20px; /*! box-shadow: 0 10px 30px rgba(0, 0, 0, 0.31); */
+    display: flex; flex-wrap: wrap; gap: 7px; justify-content: center;
+    width: max-content; max-width: calc(100vw - 30px);
+    max-height: calc(100vh - 65px); overflow-y: auto; z-index: 10001; backdrop-filter: blur(5px);
+}
+#menu-stranek.skryt { display: none; }
+.page-num-btn {
+    background: #438c60; color: #ececec; border: 1px solid #444;
+    width: 40px; height: 40px; border-radius: 8px; cursor: pointer;
+    font-weight: bold; font-size: 16px; display: flex;
+    align-items: center; justify-content: center; transition: all 0.15s;
+    
+        background: #0679ec; /*! color: white; */ border: none;
+   /* padding: 4px 7px;*/ border-radius: 30px; cursor: pointer;
+    font-family: open sans, sans-serif; font-size: 19px; font-weight: bold;
+    transition: box-shadow 0.3s, border 0.3s, text-shadow 0.3s, background 0.3s, transform 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.26);
+    border: 1px solid #3333335e;
+    text-shadow: 0px 1px 2px #000000f2; background: #16a085; min-width: 40px; text-align: center; 
+}
+.page-num-btn:hover { background: #3f3f3f; color: white; border-color: #666; background: #0b7760; text-shadow: 0px 1px 2px #0000006b;border: 1px solid #3333336e;box-shadow: 0 2px 7px rgba(0, 0, 0, 0.17); }
+.page-num-btn.aktivni { background: #f57b2a; color: white; border-color: #e67e22; transform: scale(1.08); }
+
+
+`;
+
+function ziskejVyskuStranky() {
+    var stylBody = window.getComputedStyle(document.body);
+    var pTop = parseFloat(stylBody.paddingTop) || 0;
+    var pBottom = parseFloat(stylBody.paddingBottom) || 0;
+    return window.innerHeight - pTop - pBottom;
+}
+
+function zjistiNejblizsiStranku() {
+    var vyskaStranky = ziskejVyskuStranky();
+    var aktualniY = window.scrollY || document.documentElement.scrollTop;
+    var stranka = Math.round(aktualniY / vyskaStranky);
+    if (stranka < 0) stranka = 0;
+    if (stranka >= GLOBAL_NAVIGACE.celkemStran) stranka = GLOBAL_NAVIGACE.celkemStran - 1;
+    return stranka;
+}
+
+// OPRAVA: Plynulý přechod zneviditelněním, skokem na místě a zviditelněním
+function scrolujNaStranku(cisloStranky) {
+    if (GLOBAL_NAVIGACE.probihaPrechod) return; // Zámek proti glitchům při rychlém klikání
+    
+    var vyskaStranky = ziskejVyskuStranky();
+    var ciloveY = cisloStranky * vyskaStranky;
+    
+    // Pokud už na stránce přesně jsme, zbytečně neblikáme
+    if (Math.abs(window.scrollY - ciloveY) < 5) return;
+    
+    var kontejner = document.getElementById('rodic-kontejner');
+    if (!kontejner) {
+        window.scrollTo({ top: ciloveY, behavior: 'auto' });
+        return;
+    }
+
+    GLOBAL_NAVIGACE.probihaPrechod = true;
+    
+    // 1. Plynulé zneviditelnění (Fade-out)
+    kontejner.style.transition = "opacity 0.16s ease-in-out";
+    kontejner.style.opacity = "0";
+    
+    setTimeout(function() {
+        // 2. Okamžitý neviditelný skok bez animace rolování
+        window.scrollTo({ top: ciloveY, behavior: 'auto' });
+        GLOBAL_NAVIGACE.aktualniStranka = cisloStranky;
+        aktualizujStavNavigace();
+        
+        // 3. Krátká pauza pro překreslení prohlížeče a plynulé zviditelnění (Fade-in)
+        setTimeout(function() {
+            kontejner.style.opacity = "1";
+            
+            setTimeout(function() {
+                kontejner.style.transition = "";
+                GLOBAL_NAVIGACE.probihaPrechod = false;
+            }, 300);
+        }, 50);
+        
+    }, 300);
+}
+
+function aktualizujStavNavigace() {
+    var stranka = zjistiNejblizsiStranku();
+    GLOBAL_NAVIGACE.aktualniStranka = stranka;
+    
+    var btnNahoru = document.getElementById('btn-nahoru');
+    var btnDolu = document.getElementById('btn-dolu');
+    var btnStranky = document.getElementById('btn-stranky');
+    
+    if (!btnNahoru) return;
+
+    if (stranka <= 0) btnNahoru.classList.add('vypnuto');
+    else btnNahoru.classList.remove('vypnuto');
+
+    if (stranka >= GLOBAL_NAVIGACE.celkemStran - 1) btnDolu.classList.add('vypnuto');
+    else btnDolu.classList.remove('vypnuto');
+
+    btnStranky.innerText = (stranka + 1) + " / " + GLOBAL_NAVIGACE.celkemStran;
+    
+    var menu = document.getElementById('menu-stranek');
+    if (menu && !menu.classList.contains('skryt')) {
+        var btns = menu.getElementsByClassName('page-num-btn');
+        for (var i = 0; i < btns.length; i++) {
+            if (i === stranka) btns[i].classList.add('aktivni');
+            else btns[i].classList.remove('aktivni');
+        }
+    }
+}
+
+function vytvorNeboAktualizujNavigaci(celkemStran) {
+    var existujiciNav = document.getElementById('nav-ovladani');
+    var existujiciMenu = document.getElementById('menu-stranek');
+
+    if (!GLOBAL_NASTAVENI.strankovac || celkemStran <= 1) {
+        if (existujiciNav) existujiciNav.style.display = 'none';
+        if (existujiciMenu) existujiciMenu.classList.add('skryt');
+        return;
+    }
+
+    GLOBAL_NAVIGACE.celkemStran = celkemStran;
+
+    if (!document.getElementById('nav-styly')) {
+        var styleEl = document.createElement('style');
+        styleEl.id = 'nav-styly';
+        styleEl.innerHTML = navStylyCSS;
+        document.head.appendChild(styleEl);
+    }
+
+    if (!existujiciNav) {
+        var nav = document.createElement('div');
+        nav.id = 'nav-ovladani';
+        nav.innerHTML = `
+            <button id="btn-nahoru" class="nav-btn" title="Předchozí stránka">▲</button>
+            <button id="btn-stranky" class="nav-btn" title="Výběr stránky">1 / X</button>
+            <button id="btn-dolu" class="nav-btn" title="Další stránka">▼</button>
+        `;
+        document.body.appendChild(nav);
+
+        var menu = document.createElement('div');
+        menu.id = 'menu-stranek';
+        menu.className = 'skryt';
+        document.body.appendChild(menu);
+
+        document.getElementById('btn-nahoru').addEventListener('click', function() {
+            var str = zjistiNejblizsiStranku();
+            if (str > 0) scrolujNaStranku(str - 1);
+        });
+
+        document.getElementById('btn-dolu').addEventListener('click', function() {
+            var str = zjistiNejblizsiStranku();
+            if (str < GLOBAL_NAVIGACE.celkemStran - 1) scrolujNaStranku(str + 1);
+        });
+
+        document.getElementById('btn-stranky').addEventListener('click', function(e) {
+            e.stopPropagation();
+            var menuEl = document.getElementById('menu-stranek');
+            
+            if (menuEl.classList.contains('skryt')) {
+                vygenerujMenuStranek();
+                menuEl.classList.remove('skryt');
+                
+                var rectBtn = this.getBoundingClientRect();
+                var menuWidth = menuEl.clientWidth;
+                var leftPos = rectBtn.left + (rectBtn.width / 2) - (menuWidth / 2);
+                
+                if (leftPos < 10) leftPos = 10;
+                if (leftPos + menuWidth > window.innerWidth - 10) leftPos = window.innerWidth - menuWidth - 10;
+                menuEl.style.left = leftPos + 'px';
+
+                var aktivniBtn = menuEl.querySelector('.aktivni');
+                if (aktivniBtn && menuEl.scrollHeight > menuEl.clientHeight) {
+                    menuEl.scrollTop = aktivniBtn.offsetTop - (menuEl.clientHeight / 2) + (aktivniBtn.clientHeight / 2);
+                }
+            } else {
+                menuEl.classList.add('skryt');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            var menuEl = document.getElementById('menu-stranek');
+            var navEl = document.getElementById('nav-ovladani');
+            if (menuEl && !menuEl.classList.contains('skryt') && !menuEl.contains(e.target) && !navEl.contains(e.target)) {
+                menuEl.classList.add('skryt');
+            }
+        });
+
+        var scrollTimeout;
+        window.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(aktualizujStavNavigace, 30);
+        });
+    }
+    
+    document.getElementById('nav-ovladani').style.display = 'flex';
+    aktualizujStavNavigace();
+}
+
+function vygenerujMenuStranek() {
+    var menu = document.getElementById('menu-stranek');
+    if (!menu) return;
+    menu.innerHTML = '';
+    var stranka = zjistiNejblizsiStranku();
+
+    for (var i = 0; i < GLOBAL_NAVIGACE.celkemStran; i++) {
+        var btn = document.createElement('button');
+        btn.className = 'page-num-btn' + (i === stranka ? ' aktivni' : '');
+        btn.innerText = (i + 1);
+        btn.setAttribute('data-stranka', i);
+        btn.addEventListener('click', function() {
+            var cil = parseInt(this.getAttribute('data-stranka'));
+            scrolujNaStranku(cil);
+            document.getElementById('menu-stranek').classList.add('skryt');
+        });
+        menu.appendChild(btn);
+    }
+}
+
+// PRO TIP: WeakMap automaticky uvolňuje z paměti elementy, které byly smazány při resizu
+var puvodniStylPamet = new WeakMap();
+
+function nactiProstoroveLimity(element, sirkaRodice, vyskaRodice) {
+        element.style.left = "0px";
+        element.style.top = "0px";
+        element.style.height = "auto";
+    var styl = window.getComputedStyle(element);
+    const img = element.querySelector('img');
+    const div = element.querySelector('div');
+    var jeObrazek = !!img;
+    const jetext = !!div;
+    var pomer = 4 / 3; 
+    
+    if (jeObrazek && img.naturalWidth) {
+        pomer = img.naturalWidth / img.naturalHeight;
+    }
+
+    if (!puvodniStylPamet.has(element)) {
+        // OPRAVA: Pokud má element inline height 'auto', ignorujeme ho a uložíme null
+        var h = element.style.height;
+        if (h === 'auto') h = null;
+        puvodniStylPamet.set(element, { width: element.style.width || null, height: h || null });
+    }
+    var puvodniStyly = puvodniStylPamet.get(element);
+
+    function nactiMax(hodnota, vychozi) {
+        if (!hodnota || hodnota === 'none') return vychozi;
+        return parseFloat(hodnota);
+    }
+
+    function parsujRozmer(hodnotaStylu, celkovyRozmerRodice) {
+        // OPRAVA: 'auto' vrací null, aby se nebralo jako fixní číslo
+        if (!hodnotaStylu || hodnotaStylu === 'auto') return null;
+        if (hodnotaStylu.indexOf('%') !== -1) return (parseFloat(hodnotaStylu) / 100) * celkovyRozmerRodice;
+        return parseFloat(hodnotaStylu) || null;
+    }
+
+    var cistaSirka = sirkaRodice - (GLOBAL_NASTAVENI.gap * 2);
+
+    var vyzadovanaSirka = parsujRozmer(puvodniStyly.width, cistaSirka);
+    if (vyzadovanaSirka >= cistaSirka) vyzadovanaSirka = cistaSirka;
+    
+    var vyzadovanaVyska = parsujRozmer(puvodniStyly.height, vyskaRodice);
+    var minW = parseFloat(styl.minWidth) || GLOBAL_NASTAVENI.vychoziMinSirka;
+    var maxW = nactiMax(styl.maxWidth, GLOBAL_NASTAVENI.vychoziMaxSirka);
+    var minH = parseFloat(styl.minHeight) || GLOBAL_NASTAVENI.vychoziMinVyska;
+    var maxH = nactiMax(styl.maxHeight, GLOBAL_NASTAVENI.vychoziMaxVyska);
+
+    // OPRAVA: Kontrolujeme null NEBO 'auto'
+    if (!jeObrazek && (puvodniStyly.height === null || puvodniStyly.height === 'auto')) {
+        element.style.width = (vyzadovanaSirka || minW) + "px";
+        element.style.height = "auto";
+        element.style.left = "0px";
+        vyzadovanaVyska = element.scrollHeight;
+    }
+    
+    var offset = false;
+    if (jeObrazek && !jetext) {
+        element.style.width = (vyzadovanaSirka || minW) + "px";
+        element.style.height = "auto";
+        offset = img.offsetTop;
+        vyzadovanaVyska = element.scrollHeight;
+    }
+    // OPRAVA: Kontrolujeme null NEBO 'auto' i u kombinace obrázku s textem
+    if (jeObrazek && (puvodniStyly.height === null || puvodniStyly.height === 'auto') && jetext) {
+        element.style.width = (vyzadovanaSirka || minW) + "px";
+        element.style.height = "auto";
+        element.style.left = "0px";
+        vyzadovanaVyska = element.scrollHeight;
+    }
+
+    return {
+        element: element, jeObrazek: jeObrazek, jetext: jetext, offset: offset, pomerStran: pomer,
+        vyzadovanaSirka: vyzadovanaSirka, vyzadovanaVyska: vyzadovanaVyska,
+        minW: minW, maxW: maxW, minH: minH, maxH: maxH, w: 0, h: 0, x: 0, y: 0
+    };
+}
+
+        //<div data-nezlomny="true">
+    //<p>Tento blok textu a vstupů zůstane vždy pohromadě.</p>
+//</div>
+//<div class="nerozdelovat">
+    //<h3>NADPIS FORMULÁŘE</h3>
+    //<form>...</form>
+//</div>
+function aplikujStrankovac(kontejner, maxLimitVysky) {
+    
+    // 1. OCHRANA: Spolehlivě zjistí, zda je element vizuálně prázdný (ignoruje prázdné tagy a mezery)
+    function jeStrankaVisualnePrazdna(el) {
+        var text = el.innerText || "";
+        if (text.trim().length > 0) return false;
+        var media = el.querySelector('img, canvas, svg, video, iframe, form, input, textarea, select, [data-nezlomny], [data="nezlomny"], .nerozdelovat');
+        if (media !== null) return false;
+        return true;
+    }
+
+    // Pomocná funkce pro inteligentní zanořování do obalových divů
+    function rozdelPrvek(aktualniRodic, novyRodic, uzel, limitVysky, hlavniEl) {
+        
+        var jeNezlomny = false;
+        if (uzel.nodeType === 1) {
+            var tag = uzel.tagName.toLowerCase();
+            jeNezlomny = (
+                tag === 'img' || 
+                tag === 'canvas' || 
+                tag === 'form' || 
+                uzel.classList.contains('nerozdelovat') || 
+                uzel.hasAttribute('data-nezlomny') ||
+                uzel.getAttribute('data') === 'nezlomny'
+            );
+        }
+
+        // A) NEDĚLITELNÝ PRVEK
+        if (jeNezlomny) {
+            if (jeStrankaVisualnePrazdna(hlavniEl)) {
+                // Stránka je prázdná, prvek nesmíme přesunout dál, jinak by tu zůstal 2px prázdný duch!
+                aktualniRodic.appendChild(uzel);
+            } else {
+                novyRodic.appendChild(uzel);
+            }
+            return;
+        }
+
+        // B) ČISTÝ TEXTOVÝ UZEL
+        if (uzel.nodeType === 3) {
+            var slova = uzel.nodeValue.split(/(\s+)/).filter(function(s) { return s.length > 0; });
+            var tNodeKus = document.createTextNode("");
+            aktualniRodic.appendChild(tNodeKus);
+            var presahText = "";
+            var presahlo = false;
+
+            for (var k = 0; k < slova.length; k++) {
+                if (presahlo) {
+                    presahText += slova[k];
+                    continue;
+                }
+                tNodeKus.nodeValue += slova[k];
+                if (hlavniEl.scrollHeight > limitVysky) {
+                    if (hlavniEl.innerText.trim() === slova[k].trim()) {
+                        // Nechat protéci
+                    } else {
+                        presahlo = true;
+                        tNodeKus.nodeValue = tNodeKus.nodeValue.substring(0, tNodeKus.nodeValue.length - slova[k].length);
+                        presahText += slova[k];
+                    }
+                }
+            }
+            if (presahText.length > 0) {
+                novyRodic.appendChild(document.createTextNode(presahText));
+            }
+            return;
+        }
+
+        // C) VNOŘENÝ ELEMENT
+        if (uzel.nodeType === 1) {
+            var novyObal = uzel.cloneNode(false);
+            var potomci = Array.from(uzel.childNodes);
+            uzel.innerHTML = '';
+            aktualniRodic.appendChild(uzel);
+
+            var vnitrniPresah = false;
+            for (var m = 0; m < potomci.length; m++) {
+                var potomek = potomci[m];
+                if (vnitrniPresah) {
+                    novyObal.appendChild(potomek);
+                    continue;
+                }
+
+                uzel.appendChild(potomek);
+                if (hlavniEl.scrollHeight > limitVysky) {
+                    vnitrniPresah = true;
+                    uzel.removeChild(potomek);
+                    rozdelPrvek(uzel, novyObal, potomek, limitVysky, hlavniEl);
+                }
+            }
+            // Obal vložíme do nového rodiče pouze tehdy, pokud do něj skutečně něco přeteklo
+            if (novyObal.childNodes.length > 0 && !jeStrankaVisualnePrazdna(novyObal)) {
+                novyRodic.appendChild(novyObal);
+            }
+        }
+    }
+
+    var prvky = Array.from(kontejner.getElementsByClassName('potomek-js'));
+
+    for (var i = 0; i < prvky.length; i++) {
+        var el = prvky[i];
+        var aktualniVyska = el.scrollHeight;
+
+        if (aktualniVyska > maxLimitVysky) {
+            var deti = Array.from(el.childNodes);
+            el.innerHTML = '';
+
+            if (el.scrollHeight > maxLimitVysky) {
+                deti.forEach(function(d) { el.appendChild(d); });
+                continue; 
+            }
+
+            var novyEl = el.cloneNode(false);
+            if (el.id) novyEl.id = el.id + "_stranka_" + i;
+
+            var presahNalezen = false;
+            for (var j = 0; j < deti.length; j++) {
+                var dite = deti[j];
+                if (presahNalezen) {
+                    novyEl.appendChild(dite);
+                    continue;
+                }
+
+                el.appendChild(dite);
+                if (el.scrollHeight > maxLimitVysky) {
+                    presahNalezen = true;
+                    el.removeChild(dite);
+                    rozdelPrvek(el, novyEl, dite, maxLimitVysky, el);
+                }
+            }
+
+            // Klon vložíme do DOMu pouze pokud není prázdný
+            if (novyEl.childNodes.length > 0 && !jeStrankaVisualnePrazdna(novyEl)) {
+                if (el.nextSibling) {
+                    el.parentNode.insertBefore(novyEl, el.nextSibling);
+                } else {
+                    el.parentNode.appendChild(novyEl);
+                }
+
+                var aktualniPrvky = Array.from(kontejner.getElementsByClassName('potomek-js'));
+                prvky = aktualniPrvky;
+                i = aktualniPrvky.indexOf(novyEl) - 1; 
+            }
+        }
+    }
+    // Pokud po celém procesu rozdělování zůstal v mřížce jakýkoliv vizuálně prázdný klon 
+    var vsichniPotomci = Array.from(kontejner.getElementsByClassName('potomek-js'));
+    vsichniPotomci.forEach(function(el) {
+        if (jeStrankaVisualnePrazdna(el) && el.id && el.id.indexOf('_stranka_') !== -1) {
+            if (el.parentNode) {
+                el.parentNode.removeChild(el);
+            }
+        }
+    });
+}
+
+function provedProstorovyLayout() {
+    var kontejner = document.getElementById('rodic-kontejner');
+    if (!kontejner) return; 
+
+    // 1. KROK: Prvotní načtení prvků pro inicializaci jejich rozměrů (šířky)
+    var prvkyNaZacatku = Array.from(kontejner.getElementsByClassName('potomek-js'));
+    if (prvkyNaZacatku.length === 0) return;
+
+    prvkyNaZacatku.forEach(function(el) {
+        nactiProstoroveLimity(el, kontejner.clientWidth, kontejner.clientHeight);
+        el.style.height = "auto";
+    });
+
+    // 2. KROK: Výpočet limitu a spuštění stránkovače
+    var vyskaStranky = window.innerHeight;
+    var uzitecnaVyskaStranky = vyskaStranky;
+
+    if (GLOBAL_NASTAVENI.strankovac) {
+        var stylBody = window.getComputedStyle(document.body);
+        var pTop = parseFloat(stylBody.paddingTop) || 0;
+        var pBottom = parseFloat(stylBody.paddingBottom) || 0;
+        vyskaStranky = window.innerHeight - pTop - pBottom;
+        // Od výšky okna odečteme 40px prázdný prostor dole + bezpečný odstup pro gap mřížky
+        uzitecnaVyskaStranky = vyskaStranky - 40 - (GLOBAL_NASTAVENI.gap * 2);
+
+        aplikujStrankovac(kontejner, uzitecnaVyskaStranky);
+    }
+
+    // 3. KROK: Finální načtení prvků po případném rozdělení na stránky
+    var prvky = Array.from(kontejner.getElementsByClassName('potomek-js'));
+    if (prvky.length === 0) return;
+
+    var sirkaPlochy = Math.max(10, kontejner.clientWidth - (GLOBAL_NASTAVENI.gap * 2));
+    var vyskaOknaProDno = kontejner.clientHeight - (GLOBAL_NASTAVENI.gap * 2);
+
+    var dataPrvku = prvky.map(function(el) {
+        return nactiProstoroveLimity(el, kontejner.clientWidth, kontejner.clientHeight);
+    });
+
+    dataPrvku.forEach(function(p) {
+        p.w = p.vyzadovanaSirka !== null ? p.vyzadovanaSirka : p.minW;
+        p.h = p.vyzadovanaVyska !== null ? p.vyzadovanaVyska : (p.jeObrazek ? ((p.w / p.pomerStran) + p.offset) : p.minH);
+
+        if (p.w < p.minW) p.w = p.minW; if (p.w > p.maxW) p.w = p.maxW;
+        if (p.h < p.minH) p.h = p.minH; if (p.h > p.maxH) p.h = p.maxH;
+        
+        if (p.w > sirkaPlochy) {
+            p.w = sirkaPlochy;
+            if (p.jeObrazek || GLOBAL_NASTAVENI.zachovatPomerStran) p.h = (p.w / p.pomerStran) + (p.offset || 0);
+        }
+    });
+
+    var umisteneObdelniky = [];
+    var eps = 0.1; 
+    
+    function kontrolaPruniku(testL, testT, testW, testH) {
+        var testR = testL + testW; var testB = testT + testH;
+        for (var i = 0; i < umisteneObdelniky.length; i++) {
+            var u = umisteneObdelniky[i];
+            if (testL < u.right + GLOBAL_NASTAVENI.gap - eps && 
+                testR > u.left - GLOBAL_NASTAVENI.gap + eps && 
+                testT < u.bottom + GLOBAL_NASTAVENI.gap - eps && 
+                testB > u.top - GLOBAL_NASTAVENI.gap + eps) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    var startY = 0; 
+    dataPrvku.forEach(function(p) {
+        var nalezenoMisto = false;
+        
+        if (GLOBAL_NASTAVENI.zpusobRazeni === 'striktne' && umisteneObdelniky.length > 0) {
+            startY = umisteneObdelniky[umisteneObdelniky.length - 1].top;
+        } else {
+            startY = 0;
+        }
+
+        for (var y = startY; y < 200000; y += 4) {
+            // STRÁNKOVÁNÍ: Kontrola, zda prvek nepřesahuje do 40px mezery nebo na další obrazovku
+            if (GLOBAL_NASTAVENI.strankovac && p.h <= uzitecnaVyskaStranky) {
+                var cisloStranky = Math.floor(y / vyskaStranky);
+                var limitTetoStranky = (cisloStranky * vyskaStranky) + uzitecnaVyskaStranky;
+                if (y + p.h > limitTetoStranky) {
+                    // Prvek se na tuto obrazovku nevejde, posuneme Y rovnou na začátek další obrazovky
+                    y = ((cisloStranky + 1) * vyskaStranky) - 4; // -4 proto, že cyklus udělá y += 4
+                    continue;
+                }
+            }
+
+            for (var x = 0; x <= sirkaPlochy - p.w; x += 4) {
+                if (!kontrolaPruniku(x, y, p.w, p.h)) {
+                    p.x = x; p.y = y;
+                    nalezenoMisto = true;
+                    break;
+                }
+            }
+            if (nalezenoMisto) break;
+        }
+        umisteneObdelniky.push({ left: p.x, top: p.y, right: p.x + p.w, bottom: p.y + p.h, originalRef: p });
+    });
+
+    function prekazkaNaOseY(a, b) { 
+        return (a.top < b.bottom + GLOBAL_NASTAVENI.gap - eps && a.bottom > b.top - GLOBAL_NASTAVENI.gap + eps); 
+    }
+    function prekazkaNaOseX(a, b) { 
+        return (a.left < b.right + GLOBAL_NASTAVENI.gap - eps && a.right > b.left - GLOBAL_NASTAVENI.gap + eps); 
+    }
+    function kontrolaPrunikuKrome(testL, testT, testW, testH, ignorovanyPrvek) {
+        var testR = testL + testW; var testB = testT + testH;
+        for (var i = 0; i < umisteneObdelniky.length; i++) {
+            var u = umisteneObdelniky[i];
+            if (u === ignorovanyPrvek) continue;
+            if (testL < u.right + GLOBAL_NASTAVENI.gap - eps && testR > u.left - GLOBAL_NASTAVENI.gap + eps && 
+                testT < u.bottom + GLOBAL_NASTAVENI.gap - eps && testB > u.top - GLOBAL_NASTAVENI.gap + eps) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    var zmeneno = true;
+    var iterace = 0;
+    
+    var sitMaxY = Math.max.apply(Math, umisteneObdelniky.map(function(o) { return o.bottom; }));
+    var dnoProstoru = Math.max(vyskaOknaProDno, sitMaxY);
+
+    while (zmeneno && iterace < GLOBAL_NASTAVENI.maxIteraci) {
+        zmeneno = false;
+        iterace++;
+        
+        umisteneObdelniky.forEach(function(el) {
+            var p = el.originalRef;
+            
+            var zedL = 0;
+            var zedR = sirkaPlochy;
+            var zedT = 0;
+            var zedB = dnoProstoru; 
+
+            // STRÁNKOVÁNÍ: Uzamknutí mantinelů fyziky přesně na hranice aktuální obrazovky
+            if (GLOBAL_NASTAVENI.strankovac) {
+                var cisloStrankyEl = Math.floor(el.top / vyskaStranky);
+                zedT = Math.max(zedT, cisloStrankyEl * vyskaStranky);
+                zedB = Math.min(zedB, (cisloStrankyEl * vyskaStranky) + uzitecnaVyskaStranky);
+            }
+
+            umisteneObdelniky.forEach(function(jiny) {
+                if (el === jiny) return;
+                
+                if (prekazkaNaOseY(el, jiny)) {
+                    if (jiny.right <= el.left) zedL = Math.max(zedL, jiny.right + GLOBAL_NASTAVENI.gap);
+                    if (jiny.left >= el.right) zedR = Math.min(zedR, jiny.left - GLOBAL_NASTAVENI.gap);
+                }
+                if (prekazkaNaOseX(el, jiny)) {
+                    if (jiny.bottom <= el.top) zedT = Math.max(zedT, jiny.bottom + GLOBAL_NASTAVENI.gap);
+                    if (jiny.top >= el.bottom) zedB = Math.min(zedB, jiny.top - GLOBAL_NASTAVENI.gap);
+                }
+            });
+
+            var sirkaEl = el.right - el.left;
+            var vyskaEl = el.bottom - el.top;
+
+            // --- ZVĚTŠENÍ ---
+            if (GLOBAL_NASTAVENI.faktorZvetseniDoGap > 0) {
+                var volnoX = (zedR - zedL) - sirkaEl;
+                var volnoY = (zedB - zedT) - vyskaEl;
+                
+                var puvodniW = p.w; var puvodniH = p.h;
+
+                if (volnoX > 2 || volnoY > 2) {
+                    
+                    if (p.jeObrazek || GLOBAL_NASTAVENI.zachovatPomerStran) {
+                        var narustDleX = volnoX * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
+                        var narustDleY_naSirku = (volnoY * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2) * p.pomerStran;
+                        
+                        var limitMaxX = p.maxW - p.w;
+                        var limitMaxY_naSirku = (p.maxH - p.h) * p.pomerStran;
+                        
+                        var bezpecnyNarustCelkem = Math.min(narustDleX, narustDleY_naSirku, limitMaxX, limitMaxY_naSirku);
+                        
+                        if (bezpecnyNarustCelkem > 0.5) {
+                            var novaSirka = p.w + bezpecnyNarustCelkem;
+                            var novaVyska = (novaSirka / p.pomerStran) + (p.offset || 0);
+                            
+                            var testL = el.left - (novaSirka - p.w)/2;
+                            var testT = el.top - (novaVyska - p.h)/2;
+                            
+                            // Kontrola vůči zedT a zedB nepustí element mimo jeho stránku
+                            if (testL >= 0 && testL + novaSirka <= sirkaPlochy && testT >= zedT && testT + novaVyska <= zedB) {
+                                if (!kontrolaPrunikuKrome(testL, testT, novaSirka, novaVyska, el)) {
+                                    p.w = novaSirka; p.h = novaVyska;
+                                }
+                            }
+                        }
+                    } else {
+                        if (volnoX > 2 && (GLOBAL_NASTAVENI.smerZvetseni === 'sirka' || GLOBAL_NASTAVENI.smerZvetseni === 'oba')) {
+                            var narustX = volnoX * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
+                            var novaSirka = Math.min(p.w + narustX, p.maxW);
+                            var testL = el.left - (novaSirka - p.w)/2;
+                            if (testL >= 0 && testL + novaSirka <= sirkaPlochy) {
+                                if (!kontrolaPrunikuKrome(testL, el.top, novaSirka, vyskaEl, el)) p.w = novaSirka;
+                            }
+                        }
+        
+                        if (volnoY > 2 && (GLOBAL_NASTAVENI.smerZvetseni === 'vyska' || GLOBAL_NASTAVENI.smerZvetseni === 'oba')) {
+                            var narustY = volnoY * GLOBAL_NASTAVENI.faktorZvetseniDoGap * 0.2;
+                            var novaVyska = Math.min(p.h + narustY, p.maxH);
+                            var testT = el.top - (novaVyska - p.h)/2;
+                            if (testT >= zedT && testT + novaVyska <= zedB) {
+                                if (!kontrolaPrunikuKrome(el.left, testT, p.w, novaVyska, el)) p.h = novaVyska;
+                            }
+                        }
+                    }
+                }
+
+                if (p.w !== puvodniW || p.h !== puvodniH) {
+                    sirkaEl = p.w; vyskaEl = p.h;
+                    el.right = el.left + sirkaEl; el.bottom = el.top + vyskaEl; zmeneno = true;
+                }
+            }
+
+            // --- CENTROVÁNÍ ---
+            if (GLOBAL_NASTAVENI.horizontalniCentrovani) {
+                var celkovyProstorX = zedR - zedL;
+                if (celkovyProstorX > sirkaEl) {
+                    var idealniX = zedL + (celkovyProstorX - sirkaEl) / 2;
+                    var deltaX = idealniX - el.left;
+                    if (Math.abs(deltaX) > 0.5) {
+                        var posunX = Math.round(deltaX * GLOBAL_NASTAVENI.pruznostRelaxace);
+                        if (posunX === 0) posunX = deltaX > 0 ? 1 : -1;
+                        if (el.left + posunX >= 0 && el.left + posunX + sirkaEl <= sirkaPlochy) {
+                            if (!kontrolaPrunikuKrome(el.left + posunX, el.top, sirkaEl, vyskaEl, el)) {
+                                el.left += posunX; el.right = el.left + sirkaEl; p.x = el.left; zmeneno = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (GLOBAL_NASTAVENI.vertikalniCentrovani) {
+                var celkovyProstorY = zedB - zedT;
+                if (celkovyProstorY > vyskaEl) {
+                    var idealniY = zedT + (celkovyProstorY - vyskaEl) / 2;
+                    var deltaY = idealniY - el.top;
+                    if (Math.abs(deltaY) > 0.5) {
+                        var posunY = Math.round(deltaY * GLOBAL_NASTAVENI.pruznostRelaxace);
+                        if (posunY === 0) posunY = deltaY > 0 ? 1 : -1;
+                        // Kontrola vůči zedT a zedB drží centrování uvnitř dané stránky
+                        if (el.top + posunY >= zedT && el.top + posunY + vyskaEl <= zedB) {
+                            if (!kontrolaPrunikuKrome(el.left, el.top + posunY, sirkaEl, vyskaEl, el)) {
+                                el.top += posunY; el.bottom = el.top + vyskaEl; p.y = el.top; zmeneno = true;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    var s_MinX = Math.min.apply(Math, umisteneObdelniky.map(o => o.left));
+    var s_MaxX = Math.max.apply(Math, umisteneObdelniky.map(o => o.right));
+    var s_MinY = Math.min.apply(Math, umisteneObdelniky.map(o => o.top));
+    var s_MaxY = Math.max.apply(Math, umisteneObdelniky.map(o => o.bottom));
+    
+    var mrizkaW = s_MaxX - s_MinX;
+    var mrizkaH = s_MaxY - s_MinY;
+    
+    var offsetX = GLOBAL_NASTAVENI.gap;
+    var offsetY = GLOBAL_NASTAVENI.gap;
+
+    if (GLOBAL_NASTAVENI.zarovnaniKontejneru === 'stred') {
+        offsetX = ((kontejner.clientWidth) - mrizkaW) / 2 - s_MinX;
+    }
+
+    // STRÁNKOVÁNÍ: Pevné vyrovnání výšky kontejneru a vypnutí celkového vertikálního posunu offsetY
+// STRÁNKOVÁNÍ: Pevné vyrovnání výšky kontejneru a vypnutí celkového vertikálního posunu offsetY
+    if (GLOBAL_NASTAVENI.strankovac) {
+        offsetY = GLOBAL_NASTAVENI.gap;
+        var maxStranka = Math.floor(s_MaxY / vyskaStranky);
+        var celkovaVyskaStran = (maxStranka + 1) * vyskaStranky;
+        kontejner.style.height = celkovaVyskaStran + "px";
+        
+        if (celkovaVyskaStran <= kontejner.clientHeight) {
+            document.body.style.overflowY = "hidden";
+        } else {
+            document.body.style.overflowY = "scroll";
+        }
+
+        // ---> NOVÉ: Spuštění a aktualizace navigace <---
+        vytvorNeboAktualizujNavigaci(maxStranka + 1);
+
+    } else {
+        // Původní logika pro mřížku bez stránkovače
+        if (kontejner.clientHeight > mrizkaH + (GLOBAL_NASTAVENI.gap * 2)) {
+            offsetY = (kontejner.clientHeight - mrizkaH) / 2 - s_MinY;
+            kontejner.style.height = "100%";
+            document.body.style.overflowY = "hidden"; 
+        } else {
+            kontejner.style.height = (mrizkaH + (GLOBAL_NASTAVENI.gap * 2)) + "px";
+            document.body.style.overflowY = "scroll";
+        }
+
+        // ---> NOVÉ: Pokud je stránkovač vypnutý v nastavení, navigace se skryje <---
+        vytvorNeboAktualizujNavigaci(0);
+    }
+
+    dataPrvku.forEach(function(p) {
+        p.element.style.width = Math.floor(p.w) + "px";
+        p.element.style.height = Math.floor(p.h) + "px";
+        p.element.style.left = Math.floor(p.x + offsetX) + "px";
+        p.element.style.top = Math.floor(p.y + offsetY) + "px";
+    });
+}
+
+function inicializujLayout() {
+                    provedProstorovyLayout();
+    var loader = document.getElementById('loading-obrazovka');
+    var kontejner = document.getElementById('rodic-kontejner');
+    if (loader) loader.classList.add('skryt');
+    kontejner.classList.add('povolit-animace');
+    
+    var prvky = Array.from(document.getElementsByClassName('potomek-js'));
+    prvky.forEach(function(el, i) {
+        setTimeout(function() {
+            el.classList.add('viditelny');
+        }, 50 + (i * 20)); 
+    });
+}
+
+var jednou = false;
+
+//var puvodniObsahKontejneru = "";
+
+// Upravená inicializace
+window.addEventListener('load', function() {
+    var kontejner = document.getElementById('rodic-kontejner');
+        kontejner.style.height = "auto";
+    if (kontejner) {
+        // Uložení čisté šablony před jakýmkoliv dělením stran
+        //puvodniObsahKontejneru = kontejner.innerHTML;
+        
+    var none = document.getElementById('none');
+    
+    if (none.innerHTML==="") {
+		//alert(encodeURIComponent(kontejner.innerHTML));
+		var hodnoty=encodeURIComponent(kontejner.innerHTML);
+		none.innerHTML = hodnoty;//alert();
+    }else{ 
+
+		var hodnoty=decodeURIComponent(none.innerHTML);
+		kontejner.innerHTML = hodnoty;
+	}
+					
+if (document.getElementById("nav-ovladani")) { document.getElementById("nav-ovladani").remove();}  
+if (document.getElementById("menu-stranek")) { document.getElementById("menu-stranek").remove();}    
+
+
+nacit_a_zpracuj_data();
+    
+        inicializujLayout();
+        jednou = false;
+        var resizeTimeout;
+        
+        var observer = new ResizeObserver(function() {
+			
+            kontejner.classList.remove('povolit-animace');
+            clearTimeout(resizeTimeout);
+            
+            resizeTimeout = setTimeout(function() { 
+                if (jednou === true) {
+        
+    var none = document.getElementById('none');
+    
+    if (none.innerHTML==="") {
+		 
+		var hodnoty=btoa(encodeURIComponent(kontejner.innerHTML));
+		none.innerHTML = hodnoty;//alert();
+		
+    }else{ 
+
+		var hodnoty=decodeURIComponent(none.innerHTML);
+		kontejner.innerHTML = hodnoty;
+					
+if (document.getElementById("nav-ovladani")) { document.getElementById("nav-ovladani").remove();}  
+if (document.getElementById("menu-stranek")) { document.getElementById("menu-stranek").remove();}    
+
+var parsed = parseData(rawData);
+generateTable(parsed);
+drawCanvasChart(parsed);
+scrolniTabulku();
+
+                    provedProstorovyLayout();
+    var loader = document.getElementById('loading-obrazovka');
+    if (loader) loader.classList.add('skryt');
+    
+    var prvky = Array.from(document.getElementsByClassName('potomek-js'));
+    prvky.forEach(function(el, i) {
+            el.classList.add('viditelny');
+    });
+		
+	}
+                }
+                jednou = true;
+        document.body.style.overflow = "y-scroll"; 
+        document.body.style.overflowY = "auto";
+                
+                setTimeout(() => {
+                    kontejner.classList.add('povolit-animace');
+                }, 50);
+                
+            }, 100); 
+        });
+        observer.observe(kontejner);
+    }
+  window.scrollTo({ top: 0, left: 0 }); 
+  // Pro okamžitý skrok bez animace smažte část s behavior , behavior: 'smooth'
+  
+  const mapIframe = document.getElementById("mapa");
+  const mapLoader = document.getElementById("loader");
+  const mapIframe1 = document.getElementById("youtube");
+  const mapLoader1 = document.getElementById("loader1");
+  const observer1 = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        mapIframe.src = mapIframe.dataset.src; // Načte mapu
+        observer1.unobserve(entry.target);
+        
+ mapIframe.onload = function() {
+  mapLoader.style.opacity = "0";
+  mapIframe.style.opacity = "1";
+  setTimeout(() => {
+    mapLoader.style.display = "none";
+  }, 300);
+};
+        
+      }
+      if (entry.isIntersecting) {
+        mapIframe1.src = mapIframe1.dataset.src;
+        observer1.unobserve(entry.target);
+        
+ mapIframe1.onload = function() {
+  mapLoader1.style.opacity = "0";
+  mapIframe1.style.opacity = "1";
+  setTimeout(() => {
+    mapLoader1.style.display = "none";
+  }, 300);
+};
+        
+      }
+    });
+  });
+  observer1.observe(mapIframe);
+  
+});
+
+document.addEventListener('fullscreenchange', () => {
+    provedProstorovyLayout();
+        document.body.style.overflow = "y-scroll"; 
+        document.body.style.overflowY = "auto";
+});
+
+</script>
+
+</body>
+</html>
