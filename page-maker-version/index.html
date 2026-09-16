@@ -766,7 +766,7 @@ async function nacit_a_zpracuj_data() {
     // Použití proxy kvůli obejití CORS ochrany NASA https://corsproxy.io/?key=c1981f62&url=https%3A%2F%2Fexample.com 
    const proxyUrl = "https://corsproxy.io/?key=c1981f62&url=" + encodeURIComponent(url) ;
     try {
-        const response = await fetch(proxyUrl);
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt')}`);
         if (!response.ok) throw new Error('Nepodařilo se stáhnout data.');
         const textData = await response.text();
         extrahujPozadovaneRoky(textData);
