@@ -329,7 +329,7 @@ Krásné záběry pořídíte mimo jiné u Jezerní slatě, na cestě k Polední
         </div>
         
                 <div id="horizontala" class="potomek-js" style="color:rgb(95, 95, 95); min-width: 300px; width: 50%; height: 60px;">
-            <h2 style="padding-bottom:5px;">Zprávy ze světa</h2> <small style="padding-bottom:15px;">(11.7.2026)</small>
+            <h2 style="padding-bottom:7px;">Zprávy ze světa</h2> <small style="padding-bottom:15px;">(11.7.2026)</small>
         </div>
         
         <div id="2" class="potomek-js" style="border: 1px solid #cbcaca;background-color: rgb(231, 240, 238); min-width: 300px; min-height: 150px;">
@@ -679,7 +679,10 @@ rudá růže v stráni!
 </div>
 </div>
 
-        <div id="11" class="potomek-js" style="background-color:rgb(237, 241, 244); width: 100%; max-width: 400px; min-width: 300px;">
+        <div id="11" class="potomek-js" style="background-color: rgb(152, 205, 245); width: 100%; max-width: 400px; min-width: 300px;  /* box-shadow: inset 0px -15px 60px 7px #f3f4f6;
+        border: 1px solid rgba(0, 0, 0, 0.3); */
+        background: linear-gradient(90deg, rgba(24, 138, 251, 0.03) 0%, rgba(24, 138, 251, 0.07) 10%, rgba(24, 138, 251, 0.15) 30%, rgba(24, 138, 251, 0.15) 70%, rgba(24, 138, 251, 0.07) 90%, rgba(24, 138, 251, 0.03) 100%);
+  border-radius: 15px;">
 			<div>
             <h4>11. Architektura Prahy</h4>
             <img style="max-width: 400px; min-width: 300px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1d403kydI5g3ExJiiJegbFVgAwFfAr-hrZcd6u1vxbpESmRttI_-xDUkk&s=10" alt="Foto">
@@ -729,9 +732,39 @@ var nejrok = '';
 var rawData = "";
 
 async function nacit_a_zpracuj_data() {
+		//const url = 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt';
+//// Použití allorigins.win (vrací JSON objekt, kde v property 'contents' je samotný text)
+//const proxyUrl = "https://allorigins.win" + encodeURIComponent(url);
+
+//try {
+    //const response = await fetch(proxyUrl);
+    //if (!response.ok) throw new Error('Nepodařilo se stáhnout data.');
+    
+    //const jsonData = await response.json();
+    //const textData = jsonData.contents; // Tady získáte čistý text z NASA
+    
+    //extrahujPozadovaneRoky(textData);
+//} catch (error) {
+    //console.error('Chyba při stahování:', error);
+    //alert('Chyba při stahování dat. Dočasně se použijí fixní data.');
+//}
+
+    //const url = 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt';
+    //// Použití proxy kvůli obejití CORS ochrany NASA https://corsproxy.io/?key=c1981f62&url=https%3A%2F%2Fexample.com 
+   //const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url) ;
+    //try {
+        //const response = await fetch(proxyUrl);
+        //if (!response.ok) throw new Error('Nepodařilo se stáhnout data.');
+        //const textData = await response.text();
+        //extrahujPozadovaneRoky(textData);
+    //} catch (error) {
+        //console.error('Chyba při stahování:', error);
+        //alert('Chyba při stahování dat. Dočasně se použijí fixní data.');
+        
+        
     const url = 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt';
-    // Použití proxy kvůli obejití CORS ochrany NASA
-   const proxyUrl = "https://corsproxy.io/?url=" + encodeURIComponent(url) ;
+    // Použití proxy kvůli obejití CORS ochrany NASA https://corsproxy.io/?key=c1981f62&url=https%3A%2F%2Fexample.com 
+   const proxyUrl = "https://corsproxy.io/?key=c1981f62&url=" + encodeURIComponent(url) ;
     try {
         const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('Nepodařilo se stáhnout data.');
@@ -762,7 +795,7 @@ var rawData = `
 2023    87   96  123   98   94  108  119  119  148  134  140  135    117 112     88  105  115  141  2023
 2024   125  143  139  132  116  123  120  130  121  135  130  127    128 129    135  129  124  128  2024
 2025   138  126  137  124  108  107  102  117  125  119  121  106    119 121    130  123  109  122  2025
-2026   108  125  132  117  113  118 **** **** **** **** **** ****   **** ***    113  121 **** ****  2026
+2026   109  125  132  117  113  118  125  140 **** **** **** ****   **** ***    113  121  128 ****  2026
 Year   Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec    J-D D-N    DJF  MAM  JJA  SON  Year
 `;
         extrahujPozadovaneRoky(rawData);
@@ -1070,7 +1103,7 @@ var navStylyCSS = `
     position: fixed; bottom: 46px;
     /*! background: #3e7e5d54; */ /* border: 1px solid #4440; */ padding: 8px;
     border-radius: 20px; /*! box-shadow: 0 10px 30px rgba(0, 0, 0, 0.31); */
-    display: flex; flex-wrap: wrap; gap: 7px; justify-content: center;
+    display: flex; flex-wrap: wrap;align-content: flex-end; gap: 7px; justify-content: center;
     width: max-content; max-width: calc(100vw - 30px);
     max-height: calc(100vh - 65px); overflow-y: auto; z-index: 10001; backdrop-filter: blur(5px);
 }
@@ -1224,7 +1257,7 @@ function vytvorNeboAktualizujNavigaci(celkemStran) {
             if (str < GLOBAL_NAVIGACE.celkemStran - 1) scrolujNaStranku(str + 1);
         });
 
-        document.getElementById('btn-stranky').addEventListener('click', function(e) {
+  /*      document.getElementById('btn-stranky').addEventListener('click', function(e) {
             e.stopPropagation();
             var menuEl = document.getElementById('menu-stranek');
             
@@ -1247,7 +1280,27 @@ function vytvorNeboAktualizujNavigaci(celkemStran) {
             } else {
                 menuEl.classList.add('skryt');
             }
-        });
+        });*/
+        
+		document.getElementById('btn-stranky').addEventListener('click', function(e) {
+			e.stopPropagation();
+			var menuEl = document.getElementById('menu-stranek');
+			
+			if (menuEl.classList.contains('skryt')) {
+				vygenerujMenuStranek();
+				menuEl.classList.remove('skryt');
+				
+				// Zavolání nové výpočetní a pozicovací funkce
+				optimalizujVelikostMenu(this);
+
+				var aktivniBtn = menuEl.querySelector('.aktivni');
+				if (aktivniBtn && menuEl.scrollHeight > menuEl.clientHeight) {
+					menuEl.scrollTop = aktivniBtn.offsetTop - (menuEl.clientHeight / 2) + (aktivniBtn.clientHeight / 2);
+				}
+			} else {
+				menuEl.classList.add('skryt');
+			}
+		});
 
         document.addEventListener('click', function(e) {
             var menuEl = document.getElementById('menu-stranek');
@@ -1267,6 +1320,168 @@ function vytvorNeboAktualizujNavigaci(celkemStran) {
     document.getElementById('nav-ovladani').style.display = 'flex';
     aktualizujStavNavigace();
 }
+
+/*
+function optimalizujVelikostMenu(btnEl) {
+    var menuEl = document.getElementById('menu-stranek');
+    if (!menuEl || menuEl.classList.contains('skryt')) return;
+
+    var N = GLOBAL_NAVIGACE.celkemStran;
+    if (N <= 0) return;
+
+    // Dočasně vynulujeme pevnou šířku pro přesné změření tlačítka
+    menuEl.style.width = 'auto';
+
+    var sampleBtn = menuEl.querySelector('.page-num-btn');
+    var btnW = sampleBtn ? sampleBtn.offsetWidth : 40;
+    var btnH = sampleBtn ? sampleBtn.offsetHeight : 40;
+    
+    var computedStyle = window.getComputedStyle(menuEl);
+    var gap = parseFloat(computedStyle.gap) || 7;
+    var padLeft = parseFloat(computedStyle.paddingLeft) || 8;
+    var padRight = parseFloat(computedStyle.paddingRight) || 8;
+    var padTop = parseFloat(computedStyle.paddingTop) || 8;
+    var padBottom = parseFloat(computedStyle.paddingBottom) || 8;
+
+    var padX = padLeft + padRight;
+    var padY = padTop + padBottom;
+
+    var maxW = window.innerWidth - 20;  // Okraj 10px od stran okna
+    var maxH = window.innerHeight - 65; // Odstup pro tlačítko a horní okraj
+
+    var bestCols = 1;
+    var minDiff = Infinity;
+
+    // Procházíme možné počty sloupců a hledáme nejblíže čtvercovému poměru (W = H)
+    for (var cols = 1; cols <= N; cols++) {
+        var rows = Math.ceil(N / cols);
+        var w = cols * btnW + (cols - 1) * gap + padX;
+        var h = rows * btnH + (rows - 1) * gap + padY;
+
+        var diff = Math.abs(w - h);
+
+        if (w <= maxW && h <= maxH) {
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestCols = cols;
+            }
+        } else if (w <= maxW) {
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestCols = cols;
+            }
+        }
+    }
+
+    // Nastavíme přesnou vypočítanou šířku pro čtvercové rozvržení
+    var targetWidth = Math.min(maxW, bestCols * btnW + (bestCols - 1) * gap + padX);
+    menuEl.style.width = Math.ceil(targetWidth) + 'px';
+
+    // Výpočet pozice těsně nad btn-stranky pro minimální posun
+    var rectBtn = btnEl.getBoundingClientRect();
+    var menuWidth = menuEl.offsetWidth;
+    
+    // Vycentrování nad tlačítkem
+    var leftPos = rectBtn.left + (rectBtn.width / 2) - (menuWidth / 2);
+    
+    // Ochrana před přetečením přes okraje obrazovky
+    if (leftPos + menuWidth > window.innerWidth - 10) {
+        leftPos = window.innerWidth - menuWidth - 10;
+    }
+    if (leftPos < 10) {
+        leftPos = 10;
+    }
+    
+    menuEl.style.left = Math.round(leftPos) + 'px';
+    
+    // Umístění vertikálně přímo nad tlačítko s mezerou 8px
+    var bottomPos = window.innerHeight - rectBtn.top + 8;
+    menuEl.style.bottom = Math.round(bottomPos) + 'px';
+}
+*/
+
+function optimalizujVelikostMenu(btnEl) {
+    var menuEl = document.getElementById('menu-stranek');
+    if (!menuEl || menuEl.classList.contains('skryt')) return;
+
+    var N = GLOBAL_NAVIGACE.celkemStran;
+    if (N <= 0) return;
+
+    // Dočasně vynulujeme pevnou šířku pro přesné změření vnitřku
+    menuEl.style.width = 'auto';
+
+    var sampleBtn = menuEl.querySelector('.page-num-btn');
+    var btnW = sampleBtn ? sampleBtn.offsetWidth : 40;
+    var btnH = sampleBtn ? sampleBtn.offsetHeight : 40;
+    
+    var computedStyle = window.getComputedStyle(menuEl);
+    var gap = parseFloat(computedStyle.gap) || 7;
+    var padLeft = parseFloat(computedStyle.paddingLeft) || 8;
+    var padRight = parseFloat(computedStyle.paddingRight) || 8;
+    var padTop = parseFloat(computedStyle.paddingTop) || 8;
+    var padBottom = parseFloat(computedStyle.paddingBottom) || 8;
+
+    var padX = padLeft + padRight;
+    var padY = padTop + padBottom;
+
+    var maxW = window.innerWidth - 20;  // Okraj 10px od stran okna
+    var maxH = window.innerHeight - 65; // Odstup pro tlačítko a horní okraj
+
+    var bestCols = 1;
+    var minDiff = Infinity;
+    var ZLATY_REZ = 1.618; // Požadovaný poměr (šířka je 1.618x větší než výška)
+
+    // Procházíme možné počty sloupců a hledáme poměr co nejblíže zlatému řezu
+    for (var cols = 1; cols <= N; cols++) {
+        var rows = Math.ceil(N / cols);
+        var w = cols * btnW + (cols - 1) * gap + padX;
+        var h = rows * btnH + (rows - 1) * gap + padY;
+
+        var aktualniPomer = w / h;
+        // Zjišťujeme, jak moc se aktuální poměr liší od zlatého řezu
+        var diff = Math.abs(aktualniPomer - ZLATY_REZ);
+
+        if (w <= maxW && h <= maxH) {
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestCols = cols;
+            }
+        } else if (w <= maxW) {
+            // Pokud se na výšku nevejde, ale na šířku ano (menu bude scrollovat)
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestCols = cols;
+            }
+        }
+    }
+
+    // Nastavíme přesnou vypočítanou šířku pro rozvržení dle zlatého řezu
+    var targetWidth = Math.min(maxW, bestCols * btnW + (bestCols - 1) * gap + padX);
+    menuEl.style.width = Math.ceil(targetWidth) + 'px';
+
+    // Výpočet pozice těsně nad btn-stranky pro minimální posun do stran
+    var rectBtn = btnEl.getBoundingClientRect();
+    var menuWidth = menuEl.offsetWidth;
+    
+    // Vycentrování nad tlačítkem
+    var leftPos = rectBtn.left + (rectBtn.width / 2) - (menuWidth / 2);
+    
+    // Ochrana před přetečením přes okraje obrazovky
+    if (leftPos + menuWidth > window.innerWidth - 10) {
+        leftPos = window.innerWidth - menuWidth - 10;
+    }
+    if (leftPos < 10) {
+        leftPos = 10;
+    }
+    
+    menuEl.style.left = Math.round(leftPos) + 'px';
+    
+    // Umístění vertikálně přímo nad tlačítko s mezerou 8px
+    var bottomPos = window.innerHeight - rectBtn.top + 8;
+    menuEl.style.bottom = Math.round(bottomPos) + 'px';
+}
+
+
 
 function vygenerujMenuStranek() {
     var menu = document.getElementById('menu-stranek');
