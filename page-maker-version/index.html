@@ -761,7 +761,6 @@ async function nacit_a_zpracuj_data() {
         //console.error('Chyba při stahování:', error);
         //alert('Chyba při stahování dat. Dočasně se použijí fixní data.');
         
-        
     const url = 'https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt';
     // Použití proxy kvůli obejití CORS ochrany NASA https://corsproxy.io/?key=c1981f62&url=https%3A%2F%2Fexample.com 
    const proxyUrl = "https://corsproxy.io/?key=c1981f62&url=" + encodeURIComponent(url) ;
@@ -1103,7 +1102,7 @@ var navStylyCSS = `
     position: fixed; bottom: 46px;
     /*! background: #3e7e5d54; */ /* border: 1px solid #4440; */ padding: 8px;
     border-radius: 20px; /*! box-shadow: 0 10px 30px rgba(0, 0, 0, 0.31); */
-    display: flex; flex-wrap: wrap;align-content: flex-end; gap: 7px; justify-content: center;
+    display: flex; flex-wrap: wrap; flex-wrap: wrap-reverse; align-content: flex-end; gap: 7px; justify-content: center; justify-content: right; flex-direction: row-reverse;
     width: max-content; max-width: calc(100vw - 30px);
     max-height: calc(100vh - 65px); overflow-y: auto; z-index: 10001; backdrop-filter: blur(5px);
 }
@@ -1203,14 +1202,27 @@ function aktualizujStavNavigace() {
 
     btnStranky.innerText = (stranka + 1) + " / " + GLOBAL_NAVIGACE.celkemStran;
     
-    var menu = document.getElementById('menu-stranek');
+/*    var menu = document.getElementById('menu-stranek');
     if (menu && !menu.classList.contains('skryt')) {
         var btns = menu.getElementsByClassName('page-num-btn');
         for (var i = 0; i < btns.length; i++) {
             if (i === stranka) btns[i].classList.add('aktivni');
             else btns[i].classList.remove('aktivni');
         }
+    }*/
+    var menu = document.getElementById('menu-stranek');
+if (menu && !menu.classList.contains('skryt')) {
+    var btns = menu.getElementsByClassName('page-num-btn');
+    for (var i = 0; i < btns.length; i++) {
+        var btnStranka = parseInt(btns[i].getAttribute('data-stranka'), 10);
+        
+        if (btnStranka === stranka) {
+            btns[i].classList.add('aktivni');
+        } else {
+            btns[i].classList.remove('aktivni');
+        }
     }
+}
 }
 
 function vytvorNeboAktualizujNavigaci(celkemStran) {
@@ -1482,7 +1494,7 @@ function optimalizujVelikostMenu(btnEl) {
 }
 
 
-
+/*
 function vygenerujMenuStranek() {
     var menu = document.getElementById('menu-stranek');
     if (!menu) return;
@@ -1494,6 +1506,27 @@ function vygenerujMenuStranek() {
         btn.className = 'page-num-btn' + (i === stranka ? ' aktivni' : '');
         btn.innerText = (i + 1);
         btn.setAttribute('data-stranka', i);
+        btn.addEventListener('click', function() {
+            var cil = parseInt(this.getAttribute('data-stranka'));
+            scrolujNaStranku(cil);
+            document.getElementById('menu-stranek').classList.add('skryt');
+        });
+        menu.appendChild(btn);
+    }
+}*/
+
+function vygenerujMenuStranek() {
+    var menu = document.getElementById('menu-stranek');
+    if (!menu) return;
+    menu.innerHTML = '';
+    var stranka = zjistiNejblizsiStranku();
+
+    // Cyklus jde pozpátku: od nejvyššího indexu po 0
+    for (var i = GLOBAL_NAVIGACE.celkemStran - 1; i >= 0; i--) {
+        var btn = document.createElement('button');
+        btn.className = 'page-num-btn' + (i === stranka ? ' aktivni' : '');
+        btn.innerText = (i + 1); // Zobrazí číslo stránky (např. 10, 9, 8... 1)
+        btn.setAttribute('data-stranka', i); // Uloží původní index pro skrolování
         btn.addEventListener('click', function() {
             var cil = parseInt(this.getAttribute('data-stranka'));
             scrolujNaStranku(cil);
